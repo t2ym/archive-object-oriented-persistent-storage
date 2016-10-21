@@ -1,0 +1,104 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>FileStat Class</TITLE>
+<META NAME="description" CONTENT="FileStat Class">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="previous" HREF="node51.html">
+<LINK REL="up" HREF="node49.html">
+<LINK REL="next" HREF="node56.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html1002"
+ HREF="node56.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html998"
+ HREF="node49.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html994"
+ HREF="node54.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1000"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1001"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1003"
+ HREF="node56.html">ScanDir Class</A>
+<B> Up:</B> <A NAME="tex2html999"
+ HREF="node49.html">Utility Classes</A>
+<B> Previous:</B> <A NAME="tex2html995"
+ HREF="node54.html">SortedObjectTable Class</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H2><A NAME="SECTION00623000000000000000">
+<TT>FileStat</TT> Class</A>
+</H2>
+<A NAME="368">&#160;</A>
+<P>
+<BR>
+<DIV ALIGN="CENTER"><A NAME="filestat">&#160;</A><A NAME="1384">&#160;</A>
+<TABLE>
+<CAPTION><STRONG>Figure 3.4:</STRONG>
+<TT>FileStat</TT> <I>Class</I></CAPTION>
+<TR><TD><IMG WIDTH="479" HEIGHT="242"
+ SRC="img7.gif"
+ ALT="\begin{figure}
+\begin{center}
+
+\includegraphics [scale=1]{FileStat.ps}
+\end{center}\end{figure}"></TD></TR>
+</TABLE>
+</DIV>
+<BR>
+<P>
+The <TT>FileStat</TT> class (See Figure <A HREF="node55.html#filestat">3.4</A>) is the wrapper 
+class for the <TT>stat()</TT> system call, which obtains various information
+on an entry of file systems from the operating system.
+<P>
+The class is instantiated with a path name as the parameter.  The
+constructor calls the <TT>stat()</TT> together with the <TT>geteuid()</TT> and 
+the <TT>getegid()</TT>.
+<P>
+The operation <TT>restat()</TT> updates the information on the entry by
+calling the <TT>stat()</TT> again.
+<P>
+There are some self-explanatory accessors.  The accessor <TT>exists()</TT>
+returns <TT>True</TT> if the entry exists.  The accessor <TT>getSize()</TT>
+returns the size of the entry.  The other accessors - <TT>isRegularFile()</TT>,
+<TT>isDirectory()</TT>, <TT>isReadable()</TT>, <TT>isWritable()</TT>, and 
+<TT>isExecutable()</TT> - function as their names indicate.  The results of 
+the last three accessors consults the effective user id and the effective
+group id as well as the access permissions of the entry.
+<P>
+<BR><HR>
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS">&#160;</A>
+<UL>
+<LI><A NAME="tex2html1004"
+ HREF="node56.html#SECTION00623100000000000000">
+<TT>ScanDir</TT> Class</A>
+<LI><A NAME="tex2html1005"
+ HREF="node57.html#SECTION00623200000000000000">
+<TT>RawFile</TT> Class</A>
+</UL>
+<!--End of Table of Child-Links-->
+<BR><HR>
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

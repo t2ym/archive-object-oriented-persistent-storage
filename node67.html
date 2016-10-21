@@ -1,0 +1,137 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Allocation</TITLE>
+<META NAME="description" CONTENT="Allocation">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node68.html">
+<LINK REL="previous" HREF="node66.html">
+<LINK REL="up" HREF="node64.html">
+<LINK REL="next" HREF="node68.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html1172"
+ HREF="node68.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1168"
+ HREF="node64.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1162"
+ HREF="node66.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1170"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1171"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1173"
+ HREF="node68.html">Mapping</A>
+<B> Up:</B> <A NAME="tex2html1169"
+ HREF="node64.html">Arena Class</A>
+<B> Previous:</B> <A NAME="tex2html1163"
+ HREF="node66.html">Other Members</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H3><A NAME="SECTION00634300000000000000">
+Allocation</A>
+</H3>
+<P>
+There are several primitive operations for the allocation.  Some of them 
+are shown in the Figure <A HREF="node67.html#allocate">3.13</A>.
+<P>
+<BR>
+<DIV ALIGN="CENTER"><A NAME="allocate">&#160;</A><A NAME="1402">&#160;</A>
+<TABLE>
+<CAPTION><STRONG>Figure 3.13:</STRONG>
+<I>Primitive Operations of Allocation</I></CAPTION>
+<TR><TD><IMG WIDTH="741" HEIGHT="321"
+ SRC="img18.gif"
+ ALT="\begin{figure}
+\begin{center}
+
+\includegraphics [scale=.94]{allocate.ps}
+\end{center}\end{figure}"></TD></TR>
+</TABLE>
+</DIV>
+<BR>
+<P><DL>
+<DT><STRONG>The <TT>findChunk()</TT></STRONG>
+<DD>private operation picks up an appropriate free 
+<TT>Chunk</TT> from the <TT>freeList</TT> by tracing the list.  
+<DT><STRONG>The <TT>split()</TT></STRONG>
+<DD>private operation (See Figure <A HREF="node67.html#allocate">3.13</A>) 
+splits the free <TT>Chunk</TT> picked up by the <TT>findChunk</TT> and generates 
+a newly allocated <TT>Chunk</TT>.  If the split free <TT>Chunk</TT> were smaller 
+than the minimum size of chunks in the <TT>Arena</TT>, the operation 
+would not actually split the free <TT>Chunk</TT> and allocate the whole 
+<TT>Chunk</TT> instead.
+<P><DT><STRONG>The <TT>splitTopChunk()</TT></STRONG>
+<DD>private operation is similar to the 
+<TT>split</TT> operation.  The difference is that this primitive operation 
+is invoked when there are no appropriate free <TT>Chunk</TT>s in the 
+<TT>freeList</TT>, and it splits the <TT>topChunk</TT> instead.
+<P><DT><STRONG>The <TT>destroyChunk()</TT></STRONG>
+<DD>private operation destroys an allocated 
+<TT>Chunk</TT> and restores it to the <TT>freeList</TT>.  There are four types 
+of destruction operations depending on the usage of the immediate 
+<TT>Chunk</TT>s. If the immediate <TT>Chunk</TT>s are not in use, the <TT>Chunk</TT> 
+is just inserted into the <TT>freeList</TT>.  If any of the immediate 
+<TT>Chunk</TT>s are free, this operation consolidates them into a single 
+<TT>Chunk</TT> (See Figure <A HREF="node67.html#allocate">3.13</A>).
+<P><DT><STRONG>The <TT>consolidateIntoTopChunk()</TT></STRONG>
+<DD>private operation is invoked 
+after the <TT>destroyChunk</TT> operation.  If the previous <TT>Chunk</TT> of the 
+<TT>topChunk</TT> has just been freed by the <TT>destroyChunk</TT> operation,
+this primitive operation consolidates the <TT>Chunk</TT> with the 
+<TT>topChunk</TT>.
+<P><DT><STRONG>The <TT>allocate()</TT></STRONG>
+<DD>protected operation invokes the <TT>findChunk</TT>, 
+<TT>split</TT>, and <TT>splitTopChunk</TT> operations to generate a new 
+<TT>Chunk</TT>.
+<P><DT><STRONG>The <TT>destroy()</TT></STRONG>
+<DD>protected operation invokes the <TT>destroyChunk</TT>
+operation and the <TT>ConsolidateIntoTopChunk</TT> operation to restore an 
+allocated <TT>Chunk</TT> to the free <TT>Chunk</TT>s.  
+</DL><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1172"
+ HREF="node68.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1168"
+ HREF="node64.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1162"
+ HREF="node66.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1170"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1171"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1173"
+ HREF="node68.html">Mapping</A>
+<B> Up:</B> <A NAME="tex2html1169"
+ HREF="node64.html">Arena Class</A>
+<B> Previous:</B> <A NAME="tex2html1163"
+ HREF="node66.html">Other Members</A>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

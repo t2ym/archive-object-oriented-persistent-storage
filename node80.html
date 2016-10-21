@@ -1,0 +1,145 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>PersistentObject Class</TITLE>
+<META NAME="description" CONTENT="PersistentObject Class">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node81.html">
+<LINK REL="previous" HREF="node79.html">
+<LINK REL="up" HREF="node58.html">
+<LINK REL="next" HREF="node81.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html1328"
+ HREF="node81.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1324"
+ HREF="node58.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1318"
+ HREF="node79.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1326"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1327"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1329"
+ HREF="node81.html">PointerPair Class</A>
+<B> Up:</B> <A NAME="tex2html1325"
+ HREF="node58.html">Persistent Storage Classes</A>
+<B> Previous:</B> <A NAME="tex2html1319"
+ HREF="node79.html">Entry Class</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H2><A NAME="SECTION006311000000000000000">
+<TT>PersistentObject</TT> Class</A>
+</H2>
+<A NAME="1137">&#160;</A>
+<P>
+<BR>
+<DIV ALIGN="CENTER"><A NAME="persistentobject">&#160;</A><A NAME="1418">&#160;</A>
+<TABLE>
+<CAPTION><STRONG>Figure 3.22:</STRONG>
+<TT>PersistentObject</TT> <I>Class</I></CAPTION>
+<TR><TD><IMG WIDTH="340" HEIGHT="124"
+ SRC="img27.gif"
+ ALT="\begin{figure}
+\begin{center}
+
+\includegraphics [scale=1]{PersistentObject.ps}
+\end{center}\end{figure}"></TD></TR>
+</TABLE>
+</DIV>
+<BR>
+<P>
+The <TT>PersistentObject</TT> class (See Figure <A HREF="node80.html#persistentobject">3.22</A>)
+should be used as the base class of all the objects in the persistent
+storage.
+<P>
+This class provides the mechanism for storing and obtaining the run-time 
+type information of a persistent object.  The only member variable 
+<TT>objectID</TT> can serve as the identifier for the type of the object.
+<P>
+In constructors of a derived class, the <TT>objectID</TT> is set as
+the unique value for the class.  The assignment mechanism of the values
+are not implemented in the current version of the persistent storage.
+<P>
+The accessor <TT>getID()</TT> just returns the <TT>objectID</TT> of the 
+object.  The following is a sample usage of the run-time type information
+mechanism.
+<P><PRE>
+    enum OID { OID_DerivedObject = 1, ...}; // assign ObjectIDs
+    class DerivedObject: public PersistentObject {
+    public:
+      DerivedObject(...): PersistentObject(OID_DerivedObject) { ... }
+      ...
+    };
+    PersistentPointer pp = something;
+    PersistentObject *obj;
+    obj = (PersistentObject *)pp.grab();
+    switch (obj-&gt;getID()) { // obtain the ObjectID
+    case OID_DerivedObject: // the type of obj is detected
+      ((DerivedObject *)obj)-&gt;doSomethingOnDerivedObject(...);
+      ...
+    };
+</PRE>
+<P>
+Unfortunately, the built-in virtual function mechanisms in C++ 
+corrupt in the persistent storage, for the pointers to the virtual
+tables are included in all the objects that implement virtual functions.
+The pointers become meaningless in the persistent storage.
+<P>
+There are two types of solutions for these limitations.  One has just been
+described above.  The other solution is not portable but more powerful.
+The purpose is the avoidance of the corruption of the virtual tables.
+If the pointers to the virtual tables are adjusted at the address conversions,
+ i.e., the grabbing operations, the reference pointers handed to the user
+can be used as virtual pointers.
+<P>
+The implementation of virtual functions in the compiler greatly affects
+the implementation of this mechanism, and is not portable.  More profound
+analysis is required for the run-time type information mechanisms.
+<P><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1328"
+ HREF="node81.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1324"
+ HREF="node58.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1318"
+ HREF="node79.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1326"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1327"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1329"
+ HREF="node81.html">PointerPair Class</A>
+<B> Up:</B> <A NAME="tex2html1325"
+ HREF="node58.html">Persistent Storage Classes</A>
+<B> Previous:</B> <A NAME="tex2html1319"
+ HREF="node79.html">Entry Class</A>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

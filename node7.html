@@ -1,0 +1,140 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Manipulation Schemes</TITLE>
+<META NAME="description" CONTENT="Manipulation Schemes">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node8.html">
+<LINK REL="previous" HREF="node6.html">
+<LINK REL="up" HREF="node4.html">
+<LINK REL="next" HREF="node8.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html345"
+ HREF="node8.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html341"
+ HREF="node4.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html335"
+ HREF="node6.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html343"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html344"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html346"
+ HREF="node8.html">Advantages and Disadvantages</A>
+<B> Up:</B> <A NAME="tex2html342"
+ HREF="node4.html">Backgrounds</A>
+<B> Previous:</B> <A NAME="tex2html336"
+ HREF="node6.html">Various Storages</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H1><A NAME="SECTION00430000000000000000">
+Manipulation Schemes</A>
+</H1>
+<P>
+A variety of such storages share some essential properties.  All 
+the digital storages are mathematically reducible to finite vectors of 
+binary digits.  Other properties - addressing, access speed, 
+physical representation, etc. - determine the appropriate role of 
+each storage.
+<P><DL>
+<DT><STRONG>Requirements for Storages</STRONG>
+<DD>are self-explanatory: load, store,
+and addressing.  
+<DT><STRONG>Direct Addressing</STRONG>
+<DD>is the simplest way of specifying the place
+in a storage.  Randomly accessible storages are suitable for this scheme.
+<P><DT><STRONG>Virtual Memory</STRONG>
+<DD>is a combination of byte vectors.  Large 
+logical address spaces are simulated by physical memory with the help 
+of secondary storages, which are usually hard disks.  Unlike normal 
+file systems, data on the disks are not persistent and dynamically 
+allocated and destroyed with creations and destructions of processes.
+<P><DT><STRONG>File Systems</STRONG>
+<DD>are kinds of abstraction schemes for byte vectors.
+A file is a simulated grow-able byte vector within a collection of 
+blocks on disks.  File names and hierarchical directory systems are
+usually provided to specify simulated vectors.  Fixed-width records 
+are widely used to store objects in a file.
+<P><DT><STRONG>Sequential Streams</STRONG>
+<DD>such as magnetic tapes are also byte vectors
+but accessing is highly restricted.
+<P><DT><STRONG>Plain Text Files</STRONG>
+<DD>are fundamentally byte vectors.  Although 
+a plain text file is a one-dimensional byte vector, delimiter characters
+- newline, comma, space, tab, etc. - give extra dimensions to the
+structure of the file.  Simpler manipulation is a trade-off with 
+lower performance.
+<P><DT><STRONG>Structured Document Files</STRONG>
+<DD>such as word processor documents, HTML, 
+PDF, T<SMALL>E</SMALL>X, etc. have more complicated internal structures than plain text
+files.  References to other documents or resources can be embedded within 
+these files.  Flexible operations with reasonable performance are 
+achievable on condition that the file in operation does not exceed the 
+size of the available main storage.
+<P><DT><STRONG>Tables</STRONG>
+<DD>have more than one-dimensional address space.  A spreadsheet
+consists of two-dimensional cells which can contain various types of
+objects including expressions.  A table in a relational database
+is a representation of a relation, or a collection of tuples each element
+of which is that of a domain of the relation.  How to store a bunch of 
+spreadsheets or tables in a file is implementation dependent.  Indexes
+can be generated to accelerate the access of tables.
+<P><DT><STRONG>Graphs</STRONG>
+<DD>are universally implemented in many parts of computer
+systems.  In most cases, pointers, which are variables for specifying 
+objects in an address space, function as edges of any graph structures. 
+Therefore, an address space with pointers is a prerequisite for such
+graph structures.  Hypertexts such as HTML documents are also seen as 
+graphs.  A subgraph, or a bunch of pointer-linked objects can be 
+manipulated as a compound object.  Some implementations of structured
+objects in CAD systems are examples of graphs.  How to link objects
+and how to store the structures in a storage file is implementation
+dependent.
+<P></DL><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html345"
+ HREF="node8.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html341"
+ HREF="node4.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html335"
+ HREF="node6.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html343"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html344"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html346"
+ HREF="node8.html">Advantages and Disadvantages</A>
+<B> Up:</B> <A NAME="tex2html342"
+ HREF="node4.html">Backgrounds</A>
+<B> Previous:</B> <A NAME="tex2html336"
+ HREF="node6.html">Various Storages</A>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

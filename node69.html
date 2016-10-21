@@ -1,0 +1,145 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Window Overlapping and Fragmentation</TITLE>
+<META NAME="description" CONTENT="Window Overlapping and Fragmentation">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="previous" HREF="node68.html">
+<LINK REL="up" HREF="node64.html">
+<LINK REL="next" HREF="node70.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html1194"
+ HREF="node70.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1190"
+ HREF="node64.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1186"
+ HREF="node68.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1192"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1193"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1195"
+ HREF="node70.html">ArenaInitialBlock Class</A>
+<B> Up:</B> <A NAME="tex2html1191"
+ HREF="node64.html">Arena Class</A>
+<B> Previous:</B> <A NAME="tex2html1187"
+ HREF="node68.html">Mapping</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H3><A NAME="SECTION00634500000000000000">
+Window Overlapping and Fragmentation</A>
+</H3>
+<A NAME="fragmentation">&#160;</A>
+  As described in the Section <A HREF="node36.html#newfactors">2.5</A>, <TT>Window</TT>s may overlap
+and some chunks may be fragmented.  The <TT>map</TT> operation must decide
+the suitable ranges of the <TT>Window</TT>s when they are mapped.
+<P>
+There are several operations for handling these situations.
+<P><DL>
+<DT><STRONG>The <TT>isRedundant()</TT></STRONG>
+<DD>private operation checks whether the 
+specified <TT>Window</TT> is redundant or not.  A <TT>Window</TT> is redundant when
+all the chunks in it is redundant.  A chunk is redundant on condition that
+the three conditions of the chunk will not be violated without it.  The first
+condition is that the chunk is also mapped in another <TT>Window</TT>. The
+second condition is that the chunk will not become fragmented without it.
+The third condition is that the chunk is neither grabbed nor 
+read-only-grabbed. 
+<DT><STRONG>The <TT>updateFragmentedFlags()</TT></STRONG>
+<DD>private operation checks whether
+the fragmentation flag of each chunk in the specified <TT>Window</TT> must be
+set or not, and modifies them, if any.
+<P><DT><STRONG>The <TT>removeRedundantWindow()</TT></STRONG>
+<DD>private operation removes the
+<TT>Window</TT> at the specified offset if it is redundant. The operation then
+calls the <TT>updateFragmentedFlags()</TT> operation for the immediate 
+<TT>Window</TT>s.
+<P></DL> 
+<BR>
+<DIV ALIGN="CENTER"><A NAME="overlap">&#160;</A><A NAME="1403">&#160;</A>
+<TABLE>
+<CAPTION><STRONG>Figure 3.14:</STRONG>
+<I>Overlapped Windows and Redundancy</I></CAPTION>
+<TR><TD><IMG WIDTH="747" HEIGHT="393"
+ SRC="img19.gif"
+ ALT="\begin{figure}
+\begin{center}
+
+\includegraphics [scale=.82]{overlap.ps}
+\end{center}\end{figure}"></TD></TR>
+</TABLE>
+</DIV>
+<BR>
+<P>
+In the Figure <A HREF="node69.html#overlap">3.14</A>, a sample of <TT>Window</TT> operations is shown.
+The circles represent the chunks in the <TT>Window</TT>s.  The circle is filled
+if not fragmented.
+<P>
+In the state <TT>A</TT>, three overlapped <TT>Window</TT>s are mapped and a 
+destruction of a chunk is requested.  The order of the mappings is 1, 2, then
+3.
+<P>
+In the state <TT>B</TT>, the destruction is completed and one chunk is removed.
+The just destroyed chunk becomes freed and fragmented.  Another destruction
+of a chunk is requested.
+<P>
+In the state <TT>C</TT>, the destruction is completed and the <TT>Window</TT> 2
+becomes redundant.
+<P>
+In the state <TT>D</TT>, the redundant <TT>Window</TT> is removed.  A split
+operation on a chunk is requested.
+<P>
+In the state <TT>E</TT>, a new <TT>Window</TT> is created for the newly allocated
+chunk.  The split operation has not split the chunk.  A grabbing of a chunk
+is requested.
+<P>
+In the state <TT>F</TT>, another new <TT>Window</TT> is created for mapping the
+chunk.  The <TT>Window</TT> 3 becomes redundant owing to the new <TT>Window</TT>.
+<P><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1194"
+ HREF="node70.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1190"
+ HREF="node64.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1186"
+ HREF="node68.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1192"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1193"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1195"
+ HREF="node70.html">ArenaInitialBlock Class</A>
+<B> Up:</B> <A NAME="tex2html1191"
+ HREF="node64.html">Arena Class</A>
+<B> Previous:</B> <A NAME="tex2html1187"
+ HREF="node68.html">Mapping</A>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

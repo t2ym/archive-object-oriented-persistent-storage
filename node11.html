@@ -1,0 +1,78 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>C Model</TITLE>
+<META NAME="description" CONTENT="C Model">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node12.html">
+<LINK REL="previous" HREF="node10.html">
+<LINK REL="up" HREF="node9.html">
+<LINK REL="next" HREF="node12.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html402"
+ HREF="node12.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html398"
+ HREF="node9.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html392"
+ HREF="node10.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html400"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html401"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html403"
+ HREF="node12.html">BASIC Model</A>
+<B> Up:</B> <A NAME="tex2html399"
+ HREF="node9.html">Programming Interfaces</A>
+<B> Previous:</B> <A NAME="tex2html393"
+ HREF="node10.html">Assembler Model</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H2><A NAME="SECTION00452000000000000000">
+C Model</A>
+</H2>
+<A NAME="69">&#160;</A>
+<P>
+The C programming language has fairly standardized I/O libraries
+and storage management methods.  Objects in main memory are 
+categorized into three classes by the methods of storage allocation.  
+Static objects are allocated at fixed addresses and always exist
+during the execution.  Auto objects are allocated at stacks at the
+beginning of their scopes and destroyed at the end.  Static and auto
+objects must have fixed sizes of their own.  On the other hand, dynamic 
+objects are allocated at the heap areas by the storage allocator routines:
+<TT>malloc()</TT> and <TT>free()</TT>.  Allocation and destruction of
+dynamic objects must be explicitly controlled by the application.  
+There are no other methods to access dynamic objects except pointers 
+to them.
+<P>
+The standard I/O libraries provide the programmer with the methods
+of copying objects to and from file streams.  However, pointers to
+objects in main memory become meaningless once they are copied
+to file streams.  This restriction imposes different representations
+of linked objects in main memory and in files.  Persistence of
+objects is not automatic in the C language.
+<P>
+<BR><HR>
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

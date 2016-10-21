@@ -1,0 +1,147 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Condensed Map of Classes</TITLE>
+<META NAME="description" CONTENT="Condensed Map of Classes">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node61.html">
+<LINK REL="previous" HREF="node59.html">
+<LINK REL="up" HREF="node59.html">
+<LINK REL="next" HREF="node61.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html1085"
+ HREF="node61.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1081"
+ HREF="node59.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1075"
+ HREF="node59.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1083"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1084"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1086"
+ HREF="node61.html">Object Mapping</A>
+<B> Up:</B> <A NAME="tex2html1082"
+ HREF="node59.html">Comprehensive Description</A>
+<B> Previous:</B> <A NAME="tex2html1076"
+ HREF="node59.html">Comprehensive Description</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H3><A NAME="SECTION00631100000000000000">
+Condensed Map of Classes</A>
+</H3>
+<P>
+<BR>
+<DIV ALIGN="CENTER"><A NAME="classes">&#160;</A><A NAME="1389">&#160;</A>
+<TABLE>
+<CAPTION><STRONG>Figure 3.7:</STRONG>
+<I>Condensed Map of Classes</I></CAPTION>
+<TR><TD><IMG WIDTH="745" HEIGHT="333"
+ SRC="img10.gif"
+ ALT="\begin{figure}
+\begin{center}
+
+\includegraphics [scale=.9]{classes.ps}
+\end{center}\end{figure}"></TD></TR>
+</TABLE>
+</DIV>
+<BR>
+<P>
+The classes in the persistent storage are organized basically in a
+hierarchical structure.  The condensed diagram of the classes is
+shown in the Figure <A HREF="node60.html#classes">3.7</A>.  There are only the integral parts
+of the classes in the diagram.  All the interfaces and a few peripheral 
+classes are omitted.
+<P>
+The <TT>PersistentStorage</TT> class is at the top of the hierarchy.
+The class has the control over the other classes.  All the other classes
+except for the <TT>PersistentPointer</TT> class act like 
+the internal organs of the <TT>PersistentStorage</TT> class, 
+whereas the <TT>PersistentPointer</TT> class acts like the 
+ticket for the reserved seat in the persistent storage.
+<P>
+The arrows across the classes represent the dependencies, which may 
+take different forms.  The class <TT>A</TT> may depend on the 
+class <TT>B</TT> in the following forms:
+<P>
+<UL>
+<LI> <TT>A</TT> contains <TT>B</TT> as a member variable.
+<LI> <TT>A</TT> refers <TT>B</TT> via a pointer.
+<LI> Some functions in <TT>A</TT> call those in <TT>B</TT>.
+<LI> <TT>A</TT> is derived from <TT>B</TT>.
+</UL>
+
+<P>
+Strictly speaking, all the classes are dependent on the others in some
+way.  Even the finest modification in the specifications of any class 
+would radically change the behaviors of the persistent storage.
+<P>
+Thus, both the delicate cooperation and the discrete divisions of labor 
+among the classes are crucial to the implementation of the persistent
+storage.
+<P>
+To digest the diagram with little difficulty, the explanation of the
+naming conventions of the member variables will make a convenient guidance.
+The variables ending with <TT>Table</TT> are instances of either the 
+ <TT>SortedPointerTable</TT> class or the 
+<TT>SortedObjectTable</TT> class.  The preceding words of <TT>Table</TT> indicate 
+the element classes which implement the <TT>SortableObject</TT> 
+interface.
+<P>
+The variables ending with <TT>ID</TT> are integers for the identification
+of some objects, which are indicated by the preceding words.  Similarly,
+those ending with <TT>Size</TT> or <TT>Count</TT> are integers for sizes or
+counters of something.
+<P>
+For ease of the coding and maintenance of the sources, there are some
+<TT>typedef</TT>s in them.  Such types end with <TT>Type</TT> or <TT>ID</TT> such as 
+<TT>SizeType</TT>, <TT>CounterType</TT>, <TT>OffsetType</TT>, <TT>BoolType</TT>,
+<TT>ArenaID</TT>, etc.  Most of them are just aliases for integers.
+<P><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1085"
+ HREF="node61.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1081"
+ HREF="node59.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1075"
+ HREF="node59.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1083"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1084"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1086"
+ HREF="node61.html">Object Mapping</A>
+<B> Up:</B> <A NAME="tex2html1082"
+ HREF="node59.html">Comprehensive Description</A>
+<B> Previous:</B> <A NAME="tex2html1076"
+ HREF="node59.html">Comprehensive Description</A>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

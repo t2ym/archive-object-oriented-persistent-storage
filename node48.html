@@ -1,0 +1,86 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Naming Conventions</TITLE>
+<META NAME="description" CONTENT="Naming Conventions">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node49.html">
+<LINK REL="previous" HREF="node47.html">
+<LINK REL="up" HREF="node47.html">
+<LINK REL="next" HREF="node49.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html911"
+ HREF="node49.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html907"
+ HREF="node47.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html901"
+ HREF="node47.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html909"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html910"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html912"
+ HREF="node49.html">Utility Classes</A>
+<B> Up:</B> <A NAME="tex2html908"
+ HREF="node47.html">Implementation in C++</A>
+<B> Previous:</B> <A NAME="tex2html902"
+ HREF="node47.html">Implementation in C++</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H1><A NAME="SECTION00610000000000000000">
+Naming Conventions</A>
+</H1>
+<P>
+Naming conventions of identifiers for classes, functions, variables, 
+etc. are not only clues to the compiler but also expressive hints
+to the programmer.  An identifier can express various aspects of the
+object with the name.
+<P>
+Naming conventions greatly affects the usability and maintainability 
+of programs, namely, their quality.
+<P>
+In the implementation, naming conventions conform mostly to those of the 
+Java language, which are very descriptive and friendly.  The conventions
+are summarized as follows:
+<P><DL>
+<DT><STRONG>Identifiers</STRONG>
+<DD>are concatenations of words which are descriptive
+of their types, functions, roles, etc.
+<DT><STRONG>The first letter of concatenated words</STRONG>
+<DD>is capitalized.
+<DT><STRONG>The first letter of an identifier</STRONG>
+<DD>is capitalized only when it is
+  a class or a type.
+<DT><STRONG>Accessors</STRONG>
+<DD>take one of these forms: <TT>isWhat()</TT>, 
+  <TT>getSomething()</TT>, <TT>setSomething()</TT>, <TT>clearSomething()</TT>.
+</DL>
+<P>
+For example, a class may have the name of <TT>PersistentPointer</TT>.  An 
+accessor may have the name of <TT>isGrabbed</TT>.  Names which can be 
+interpreted as pseudo-English expressions will be helpful.
+<P>
+<BR><HR>
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

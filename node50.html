@@ -1,0 +1,129 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>MMap Class</TITLE>
+<META NAME="description" CONTENT="MMap Class">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node51.html">
+<LINK REL="previous" HREF="node49.html">
+<LINK REL="up" HREF="node49.html">
+<LINK REL="next" HREF="node51.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html943"
+ HREF="node51.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html939"
+ HREF="node49.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html933"
+ HREF="node49.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html941"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html942"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html944"
+ HREF="node51.html">SortedTable Classes</A>
+<B> Up:</B> <A NAME="tex2html940"
+ HREF="node49.html">Utility Classes</A>
+<B> Previous:</B> <A NAME="tex2html934"
+ HREF="node49.html">Utility Classes</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H2><A NAME="SECTION00621000000000000000">
+<TT>MMap</TT> Class</A>
+</H2>
+<A NAME="mmapdesc">&#160;</A><A NAME="250">&#160;</A>
+<P>
+<BR>
+<DIV ALIGN="CENTER"><A NAME="mmapclass">&#160;</A><A NAME="1375">&#160;</A>
+<TABLE>
+<CAPTION><STRONG>Figure 3.1:</STRONG>
+<TT>MMap</TT> <I>Class </I></CAPTION>
+<TR><TD><IMG WIDTH="443" HEIGHT="237"
+ SRC="img4.gif"
+ ALT="\begin{figure}
+\begin{center}
+
+\includegraphics [scale=1]{MMap.ps}
+\end{center}\end{figure}"></TD></TR>
+</TABLE>
+</DIV>
+<BR>
+<P>
+The class <TT>MMap</TT> is the wrapper class for the <TT>mmap()</TT> system
+call (See Section <A HREF="node27.html#mmapsystemcall">2.3.3</A>) and its relatives.  The summary 
+of the interface is shown in Figure <A HREF="node50.html#mmapclass">3.1</A>.
+<P>
+There are three constructors for the class.  One is for the first
+mapping of a file whose name is specified in the first parameter.  The 
+constructor opens the file in the mode specified in the second parameter.
+The file descriptor is stored in the member <TT>fd</TT>.  The protection
+mode and the mapping flags are appropriately determined and stored in
+the member <TT>prot</TT> and <TT>flags</TT>.  When the file is <TT>/dev/zero</TT>,
+the member <TT>flags</TT> is configured as <I>copy-on-write</I> for 
+implementation of non-persistent mapping.  The file name is stored in
+the member <TT>fileName</TT>.
+<P>
+Other constructors are for inheritance of another <TT>MMap</TT> instance
+or a file descriptor.  The file name and the mapping are not inherited
+from the instance.
+<P>
+The destructor unmaps the mapping if mapped, and closes the file if
+the <TT>fileName</TT> is not null, which means that the instance has opened
+the file.
+<P>
+The operation <TT>map(offset, length)</TT> maps the specified region of
+the file in a region in the main memory by the <TT>mmap()</TT> system call.
+The starting address of the region can be obtained via the accessor 
+<TT>getAddr()</TT>.
+<P>
+The operation <TT>unmap()</TT> unmaps the mapped region by the <TT>munmap()</TT>
+system call.  The operation <TT>sync()</TT> synchronizes the region in the 
+main memory with the file.  The synchronization is either synchronously or 
+asynchronously scheduled.
+<P><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html943"
+ HREF="node51.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html939"
+ HREF="node49.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html933"
+ HREF="node49.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html941"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html942"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html944"
+ HREF="node51.html">SortedTable Classes</A>
+<B> Up:</B> <A NAME="tex2html940"
+ HREF="node49.html">Utility Classes</A>
+<B> Previous:</B> <A NAME="tex2html934"
+ HREF="node49.html">Utility Classes</A>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

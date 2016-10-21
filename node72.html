@@ -1,0 +1,79 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Accessors</TITLE>
+<META NAME="description" CONTENT="Accessors">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node73.html">
+<LINK REL="previous" HREF="node71.html">
+<LINK REL="up" HREF="node71.html">
+<LINK REL="next" HREF="node73.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html1234"
+ HREF="node73.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1230"
+ HREF="node71.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1224"
+ HREF="node71.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1232"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1233"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1235"
+ HREF="node73.html">Constructors</A>
+<B> Up:</B> <A NAME="tex2html1231"
+ HREF="node71.html">Window Class</A>
+<B> Previous:</B> <A NAME="tex2html1225"
+ HREF="node71.html">Window Class</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H3><A NAME="SECTION00636100000000000000">
+Accessors</A>
+</H3>
+<P>
+There are a bunch of accessors for the member variables.  The accessor
+<TT>isWithinRange(offset)</TT> just checks whether the <TT>offset</TT>
+is mapped or not.  The accessors <TT>isValid(offset)</TT>, 
+<TT>isAllocated(offset)</TT>, <TT>isGrabbed(offset)</TT>, 
+<TT>isFragmented(offset)</TT> check whether the
+<TT>offset</TT> points to a persistent object or not, whether the chunk at
+the <TT>offset</TT> is allocated or not, whether the object at the <TT>offset</TT>
+is grabbed or not, and whether the chunk at the <TT>offset</TT> is fragmented
+or not, respectively.  As discussed in the Section <A HREF="node69.html#fragmentation">3.3.4</A>,
+a persistent object is in the state of <B>fragmentation</B> not only when
+the whole chunk is not within the region but also when another <TT>Window</TT>
+contains the same whole chunk.  Otherwise, there would appear two 
+<TT>Window</TT>s valid for the reference of the object, which would be 
+inconsistent.
+<P>
+The accessors <TT>isDirty()</TT>, <TT>setDirty()</TT>, and <TT>clearDirty()</TT>
+check or modify the <TT>dirty</TT> flag.  The accessors 
+<TT>getTotalGrabCount()</TT> and <TT>getTotalGrabCountReadOnly()</TT> obtain
+the values of the corresponding variables.  The accessor 
+<TT>isCompletelyReleased()</TT> checks whether or not both the 
+<TT>totalGrabCount</TT> and the <TT>totalGrabCountReadOnly</TT> are 0.
+<P>
+<BR><HR>
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

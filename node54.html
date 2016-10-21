@@ -1,0 +1,69 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>SortedObjectTable Class</TITLE>
+<META NAME="description" CONTENT="SortedObjectTable Class">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="previous" HREF="node53.html">
+<LINK REL="up" HREF="node51.html">
+<LINK REL="next" HREF="node55.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html992"
+ HREF="node55.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html988"
+ HREF="node51.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html984"
+ HREF="node53.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html990"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html991"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html993"
+ HREF="node55.html">FileStat Class</A>
+<B> Up:</B> <A NAME="tex2html989"
+ HREF="node51.html">SortedTable Classes</A>
+<B> Previous:</B> <A NAME="tex2html985"
+ HREF="node53.html">SortedPointerTable Class</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H3><A NAME="SECTION00622300000000000000">
+<TT>SortedObjectTable</TT> Class</A>
+</H3>
+<A NAME="359">&#160;</A>
+<P>
+The <TT>SortedObjectTable</TT> class is another concrete implementation
+of <TT>SortedTable</TT>.  The table is implemented by an array of actual 
+objects.  Naturally, relatively small objects are suitable for the
+elements.
+<P>
+The notable feature of the class is that the operators return not 
+the objects but the <B>references</B> of the objects, which enables
+the manipulation of the objects in the table.  For example, the object
+with the <TT>key</TT> in the <TT>table</TT> can be manipulated by the
+statement <TT>table[key].manipulate(parameters, ...)</TT>.  The <TT>key</TT>
+itself must not be changed by the manipulation.
+<P>
+<BR><HR>
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

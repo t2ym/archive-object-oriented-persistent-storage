@@ -1,0 +1,90 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Operation Overheads</TITLE>
+<META NAME="description" CONTENT="Operation Overheads">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node90.html">
+<LINK REL="previous" HREF="node88.html">
+<LINK REL="up" HREF="node85.html">
+<LINK REL="next" HREF="node90.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html1438"
+ HREF="node90.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1434"
+ HREF="node85.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1428"
+ HREF="node88.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1436"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1437"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1439"
+ HREF="node90.html">Storage Overheads</A>
+<B> Up:</B> <A NAME="tex2html1435"
+ HREF="node85.html">Performance Analysis</A>
+<B> Previous:</B> <A NAME="tex2html1429"
+ HREF="node88.html">Algorithms</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H1><A NAME="SECTION00830000000000000000">
+Operation Overheads</A>
+</H1>
+<P>
+<BR>
+<DIV ALIGN="CENTER"><A NAME="performance">&#160;</A><A NAME="1427">&#160;</A>
+<TABLE>
+<CAPTION><STRONG>Figure 5.1:</STRONG>
+<I>Performance</I></CAPTION>
+<TR><TD><IMG WIDTH="557" HEIGHT="495"
+ SRC="img34.gif"
+ ALT="\begin{figure}
+\begin{center}
+
+\includegraphics [scale=1]{performance.ps}
+\end{center}\end{figure}"></TD></TR>
+</TABLE>
+</DIV>
+<BR>
+<P>
+The Figure <A HREF="node89.html#performance">5.1</A> shows the transfer rates and the operation
+rates with the different object sizes.  The performance would be different
+from application to application.  Therefore, the performance rates are
+fairly rough.
+<P>
+The statistics are obtained from the execution of various operations on
+the <TT>SimpleTree</TT> class.  Insertion, searching, matching, traversing,
+and destruction are performed on the objects with different object sizes.
+<P>
+Naturally, the number of object operations per second decreases with 
+the increase of the object sizes.  On the other hand, the transfer rates
+culminate when the object size is about 4096 bytes, which is the page 
+size of the virtual memory system of the operating system, and also the
+block size of the file system.
+<P>
+The CPU usage reduces with the increase of the object sizes.
+<P>
+<BR><HR>
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

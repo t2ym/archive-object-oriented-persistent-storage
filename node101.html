@@ -1,0 +1,2824 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>PersistentStorage.cc</TITLE>
+<META NAME="description" CONTENT="PersistentStorage.cc">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node102.html">
+<LINK REL="previous" HREF="node100.html">
+<LINK REL="up" HREF="node99.html">
+<LINK REL="next" HREF="node102.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html1591"
+ HREF="node102.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1587"
+ HREF="node99.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1581"
+ HREF="node100.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1589"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1590"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1592"
+ HREF="node102.html">MMap.h</A>
+<B> Up:</B> <A NAME="tex2html1588"
+ HREF="node99.html">The Sources</A>
+<B> Previous:</B> <A NAME="tex2html1582"
+ HREF="node100.html">PersistentStorage.h</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H1><A NAME="SECTION001120000000000000000">
+<TT>PersistentStorage.cc</TT></A>
+</H1>
+
+<PRE>
+// PersistentStorage.cc
+// Copyright (C) 1997,98 Mori Tetsuya
+// 12/16/97
+// 12/17/97 
+// 12/20/97 map()
+// 12/21/97 grow()
+// 12/24/97 initializeObjectTable(), splitTopChunk(), ...
+// 12/26/97 destroy(), findChunk(), split()
+// 12/28/97 removeRedundantWindow(), -O3 optimization bug avoidance
+// 12/29/97 map() with validation, minimumChunkSize()
+// 12/30/97 cleanUp()
+// 1/2/98   setObjectFlag(), getEntryPoint(), stabilized
+// 1/3/98   PointerPair, PersistentObject
+
+#pragma implementation &quot;MMap.h&quot;
+#pragma implementation &quot;PersistentStorage.h&quot;
+#pragma implementation &quot;FileStat.h&quot;
+#pragma implementation &quot;SortedTable.h&quot;
+
+#ifdef DEBUG
+void breakpoint() {} 
+#endif
+
+#include &quot;PersistentStorage.h&quot;
+#include &lt;strstream.h&gt;
+#include &lt;new.h&gt;
+
+// null objects for SortableObject's
+PersistentOffset PersistentOffset::nullObject = PersistentOffset();
+Entry Entry::nullObject = Entry();
+
+// This is the only persistent storage object in the program
+PersistentStorage *ps = 0;
+
+// PersistentStorage member functions
+
+/*
+  constructor -- initialization of persistent storage
+
+  This constructor initializes the global pointer PersistentStorage *ps
+  with 'this' pointer.  The pointer is referenced by PersistentPointer
+  objects to find out the unique PersistentStorage object.  Therefore,
+  no two PersistentStorage object can co-exist.
+  parameter:
+  const char *dir -- the directory for arenas
+ */
+PersistentStorage::PersistentStorage(const char *dir) {
+  if (dir == 0) {
+    // storage directory is not specified
+    return;
+  }
+  if (ps != 0) { 
+    // this constructor can be called only once
+    return;
+  }
+  FileStat fs(dir);
+  if (!(fs.isDirectory() &amp;&amp; 
+        fs.isReadable() &amp;&amp; 
+        fs.isWritable())) {
+    return;
+  }
+  baseDir = new char[strlen(dir) + 1];
+  strcpy(baseDir, dir);
+  totalWindowSize = 0;
+  
+  initializeArenaTable();
+  ps = this;
+  initializeEntryTable();
+}
+
+// destructor for PersistentStorage
+PersistentStorage::~PersistentStorage() {
+  if (ps == 0) {
+    return;
+  }
+  //cleanUp(True);
+  synchronize();
+  arenaTable.removeAll();
+  //entryTable.removeAll();
+  if (baseDir != 0) {
+    delete baseDir;
+  }
+  ps = 0;
+}
+
+// public operations on PersistentStorage
+
+/*
+  allocate -- one of the primitive operations on PersistentStorage
+
+  This operation finds an appropriate Arena and allocates a storage
+  block.
+  parameters:
+  SizeType size -- the size of the new storage, excluding Chunk object
+  BoolType persistent -- False for requesting non-persistent storage block
+
+  return value:
+  PersistentPointer -- the pointer to the allocated Chunk, 
+                       nullObject for error
+ */
+PersistentPointer 
+PersistentStorage::allocate(SizeType size, BoolType persistent) {
+  OffsetType off;
+  ArenaID aid;
+  if (size &gt; 0) {
+    if (persistent) {
+      cleanUp();
+      ArenaID aidBase = Arena::calculateMinimumChunkSizeBits(size);
+      ArenaID aidMax = aidBase + (1 &lt;&lt; 24);
+      aid = 1;
+      off = 0;
+      SizeType max = arenaTable.searchByKey(aidMax) + 1;
+      if (arenaTable.getSize() &lt; max)
+        max = arenaTable.getSize();
+      SizeType index = arenaTable.searchByKey(aidBase + 1);
+      Arena *arena = 0;
+      Arena *lastArena = 0;
+#ifdef DEBUG
+      {
+        SizeType tmpindex;
+        SizeType tmpMax = arenaTable.getSize();
+        cerr &lt;&lt; &quot;ArenaTable &quot; &lt;&lt; tmpMax &lt;&lt; endl;
+        for (tmpindex = 0; tmpindex &lt; tmpMax; tmpindex++) {
+          arena = arenaTable(tmpindex);
+          cerr &lt;&lt; &quot;(&quot; &lt;&lt; tmpindex &lt;&lt; &quot;) &quot; 
+               &lt;&lt; arena-&gt;masterWindow.getFileName()
+               &lt;&lt; &quot; &quot; &lt;&lt; (void *)arena-&gt;getKey() 
+               &lt;&lt; &quot; &quot; &lt;&lt; arena-&gt;getMinimumChunkSize()
+               &lt;&lt; ((tmpindex == index) ? &quot; index &quot; : &quot;&quot;)
+               &lt;&lt; ((tmpindex == max) ? &quot; max &quot; : &quot;&quot;)
+               &lt;&lt; endl;
+        }
+        cerr &lt;&lt; &quot;AidBase &quot; &lt;&lt; (void *)aidBase &lt;&lt; endl
+             &lt;&lt; &quot;AidMax &quot; &lt;&lt; (void *)aidMax &lt;&lt; endl
+             &lt;&lt; &quot;size &quot; &lt;&lt; size &lt;&lt; endl;
+      }
+#endif
+      for (; index &lt; max; index++) {
+        arena = arenaTable(index);
+        if (arena == 0)
+          continue;
+        aid = arena-&gt;getKey();
+        if (aidBase &lt; aid &amp;&amp; aid &lt; aidMax) {
+#ifdef DEBUG
+          cerr &lt;&lt; &quot;selected Arena &quot; 
+               &lt;&lt; arena-&gt;masterWindow.getFileName() 
+               &lt;&lt; &quot; for size &quot; &lt;&lt; size &lt;&lt; endl;
+#endif
+          lastArena = arena;
+          off = arena-&gt;allocate(size);
+          if (off &gt; 0) { // allocation succeeded 
+            break;
+          }
+          else {
+#ifdef DEBUG
+            cerr &lt;&lt; &quot;growing Arena &quot; 
+                 &lt;&lt; arena-&gt;masterWindow.getFileName() 
+                 &lt;&lt; &quot; for size &quot; &lt;&lt; size &lt;&lt; endl;
+#endif
+            arena-&gt;grow();
+            off = arena-&gt;allocate(size);
+            if (off &gt; 0)
+              break;
+#ifdef DEBUG
+            else 
+              cerr &lt;&lt; &quot;grown Arena &quot;
+                   &lt;&lt; arena-&gt;masterWindow.getFileName() 
+                   &lt;&lt; &quot; allocation failed for size &quot; &lt;&lt; size &lt;&lt; endl;
+#endif
+          }
+        }
+      }
+      if (off &lt;= 0) { // allocation failed
+        if (lastArena != 0 &amp;&amp; 
+            aidBase &lt; lastArena-&gt;getKey() &amp;&amp; 
+            lastArena-&gt;getKey() &lt; aidMax) { 
+          // there are some Arena objects for the size
+          aid = lastArena-&gt;getKey() + 1; // next ArenaID
+        } else { // there are no persistent Arena objects
+          aid = aidBase + 1;
+        } 
+        char *file = new char[512];
+        strcpy(file, baseDir);
+        strcat(file, &quot;/&quot;);
+        sprintf(file + strlen(file), arenaFilenameFormat, aid);
+#ifdef DEBUG
+        cerr &lt;&lt; &quot;creating arena &quot; &lt;&lt; file &lt;&lt; &quot; for size &quot; &lt;&lt; size &lt;&lt; endl;
+#endif
+        arena = new Arena(aid, file); // create new Arena
+        if (arena != 0 &amp;&amp; arena-&gt;getKey() == aid) {
+          arenaTable += arena;
+          off = arena-&gt;allocate(size);
+        } else { // Arena creation failed
+          if (arena != 0) 
+            delete arena; // clean up the junk Arena
+          off = 0;
+        }
+      }
+    } else { // non-persistent allocation requested
+      aid = 0;
+      Arena *arena = arenaTable[aid];
+      if (arena == 0) {
+        arena = new Arena(0, &quot;/dev/zero&quot;); // create non-persistent Arena
+        if (arena != 0) {
+          if (arena-&gt;getKey() == 0) {
+            arenaTable += arena;
+          } else {
+            delete arena;
+            arena = 0;
+          }
+        } 
+      } 
+      if (arena != 0) {
+        off = arena-&gt;allocate(size);
+        if (off == 0) {
+          arena-&gt;grow();
+          off = arena-&gt;allocate(size);
+        }
+      } else {
+        off = 0;
+      }
+    }
+  } else {
+    aid = 0;
+    off = 0;
+  }
+  PersistentPointer pp(aid, off);
+#ifdef DEBUG
+  if (aid != 0 &amp;&amp; aid != 1) {
+    cerr &lt;&lt; &quot;PersistentStorage::allocate() aid &quot; &lt;&lt; aid 
+         &lt;&lt; &quot; off &quot; &lt;&lt; off &lt;&lt; endl;
+  }
+#endif
+  return pp;
+}
+
+/*
+  destroy -- one of the primitive operations on PersistentStorage
+
+  This operation destroys the allocated Chunk and returns it to
+  the free Chunk list.
+  parameter:
+  PersistentPointer &amp;pp -- the pointer to the allocated Chunk,
+                           this pointer must grab the object and 
+                           no other pointers must readonly-grab
+                           the object.
+
+  return value:
+  BoolType -- True if successful
+
+ */
+BoolType PersistentStorage::destroy(PersistentPointer &amp;pp) {
+  if (pp.isGrabbed()) { // pp must be grabbed
+    if (pp.getArenaID() &gt;= 0 &amp;&amp; pp.getOffset() != 0) { // pp must not be null
+      Arena *arena = getArena(pp.getArenaID()); // get the Arena object
+      if (arena != 0) { // Arena found
+        if (arena-&gt;getGrabCountReadOnly(pp.getOffset()) == 0) { 
+          // the object must not be grabbed read-only
+          if (arena-&gt;destroy(pp.getOffset())) {
+            pp.clearGrabbed();
+            cleanUp();
+            return True;
+          } else { // destruction failed
+#ifdef DEBUG
+            cerr &lt;&lt; &quot;PersistentStorage::destroy destruction failed&quot; &lt;&lt; endl;
+#endif
+            return False;
+          }
+        } else { // the object is grabbed read-only
+#ifdef DEBUG
+          cerr &lt;&lt; &quot;PersistentStorage::destroy grabbed read-only&quot; &lt;&lt; endl;
+#endif
+          return False;
+        }
+      } else { // Arena not found
+#ifdef DEBUG
+        cerr &lt;&lt; &quot;PersistentStorage::destroy arena not found&quot; &lt;&lt; endl;
+#endif
+        return False;
+      }
+    } else { // pp is null
+#ifdef DEBUG
+      cerr &lt;&lt; &quot;PersistentStorage::destroy pp is null&quot; &lt;&lt; endl;
+#endif
+      return False;
+    }
+  } else { // pp is not grabbed
+#ifdef DEBUG
+      cerr &lt;&lt; &quot;PersistentStorage::destroy pp is not grabbed&quot; &lt;&lt; endl;
+#endif
+    return False;
+  }
+}
+
+PersistentPointer PersistentStorage::getEntryPoint(EntryID eid) {
+  Entry entry(entryTable[eid]);
+  return entry.entryPoint;
+}
+
+BoolType PersistentStorage::setEntryPoint(EntryID eid, PersistentPointer &amp;pp) {
+  if (!entryTable[eid].isNull()) {
+    entryTable -= eid;
+  }
+  if (pp == 0)
+    return True;
+
+  Entry entry(eid, pp);
+  entryTable += entry;
+
+  return True;
+}
+
+BoolType PersistentStorage::synchronize() {
+  SizeType index;
+  SizeType size = arenaTable.getSize();
+  Arena *arena;
+  for (index = 0; index &lt; size; index++) {
+    arena = arenaTable(index);
+    if (arena != 0) 
+      arena-&gt;synchronize();
+  }
+  
+  SizeType entrySize;
+  char entryFilePath[1024];
+  
+  if (baseDir == 0)
+    return False;
+  strcpy(entryFilePath, baseDir);
+  strcat(entryFilePath, &quot;/&quot;);
+  strcat(entryFilePath, entryPointTableFilename);
+
+  RawFile entryFile(entryFilePath);
+
+  if (entryFile.exists() &amp;&amp; !entryFile.isRegularFile()) 
+    return False; // file type is inappropriate
+
+  entrySize = entryTable.getSize();
+  if (entrySize &gt; 0) {
+    entryFile.create();
+    Entry *table = entryTable.getTable();
+    entryFile.write((void *)table, entrySize * sizeof(Entry));
+    entryFile.close();
+  }
+  return True;
+}
+
+// protected member functions of PersistentStorage
+
+PointerType PersistentStorage::grab(PersistentPointer &amp;pp) {
+  if (!pp.isGrabbed()) { // pp must not be grabbed
+    if (pp.getArenaID() &gt;= 0 &amp;&amp; pp.getOffset() != 0) { // pp must not be null
+      Arena *arena = getArena(pp.getArenaID()); // get the Arena object
+      if (arena != 0) { // Arena found
+        Chunk *chunk = arena-&gt;grab(pp.getOffset()); // grab the object
+        cleanUp();
+        if (chunk != 0) { // grabbing succeeded
+          pp.setGrabbed();
+          return chunk-&gt;getMemBlock(); // return the memory block
+        } else { // grabbing failed
+#ifdef DEBUG
+          cerr &lt;&lt; &quot;PersistentStorage::grab grabbing failed&quot; &lt;&lt; endl;
+#endif
+          return 0;
+        }
+      } else { // Arena not found
+#ifdef DEBUG
+        cerr &lt;&lt; &quot;PersistentStorage::grab Arena not found&quot; &lt;&lt; endl;
+#endif
+        return 0;
+      }
+    } else { // pp is null
+#ifdef DEBUG
+      cerr &lt;&lt; &quot;PersistentStorage::grab pp is null&quot; &lt;&lt; endl;
+#endif
+      return 0;
+    }
+  } else { // pp has been grabbed
+#ifdef DEBUG
+    cerr &lt;&lt; &quot;PersistentStorage::grab pp has been grabbed&quot; &lt;&lt; endl;
+#endif
+    return 0;
+  }
+}
+
+BoolType PersistentStorage::release(PersistentPointer &amp;pp) {
+  if (pp.isGrabbed()) { // pp must be grabbed
+    if (pp.getArenaID() &gt;= 0 &amp;&amp; pp.getOffset() != 0) { // pp must not be null
+      Arena *arena = getArena(pp.getArenaID()); // get the Arena object
+      if (arena != 0) { // Arena found
+        if (arena-&gt;release(pp.getOffset())) { // release the object
+          pp.clearGrabbed();
+          return True;
+        } else {
+          return False;
+        }
+      } else { // Arena not found
+        return False;
+      }
+    } else { // pp is null
+      return False;
+    }
+  } else { // pp has not been grabbed
+    return False;
+  }
+}
+
+PointerType PersistentStorage::grabReadOnly(PersistentPointer &amp;pp) {
+  if (!pp.isGrabbedReadOnly()) { // pp must not be grabbed
+    if (pp.getArenaID() &gt;= 0 &amp;&amp; pp.getOffset() != 0) { // pp must not be null
+      Arena *arena = getArena(pp.getArenaID()); // get the Arena object
+      if (arena != 0) { // Arena found
+        Chunk *chunk = arena-&gt;grabReadOnly(pp.getOffset()); // grab the object
+        cleanUp();
+        if (chunk != 0) { // grabbing succeeded
+          pp.setGrabbedReadOnly();
+          return chunk-&gt;getMemBlock(); // return the memory block
+        } else { // grabbing failed
+          return 0;
+        }
+      } else { // Arena not found
+        return 0;
+      }
+    } else { // pp is null
+      return 0;
+    }
+  } else { // pp has been grabbed
+    return 0;
+  }
+}
+
+BoolType PersistentStorage::releaseReadOnly(PersistentPointer &amp;pp) {
+  if (pp.isGrabbedReadOnly()) { // pp must be grabbed
+    if (pp.getArenaID() &gt;= 0 &amp;&amp; pp.getOffset() != 0) { // pp must not be null
+      Arena *arena = getArena(pp.getArenaID()); // get the Arena object
+      if (arena != 0) { // Arena found
+        if (arena-&gt;releaseReadOnly(pp.getOffset())) { // release the object
+          pp.clearGrabbedReadOnly();
+          return True;
+        } else {
+          return False;
+        }
+      } else { // Arena not found
+        return False;
+      }
+    } else { // pp is null
+      return False;
+    }
+  } else { // pp has not been grabbed
+    return False;
+  }
+}
+
+BoolType PersistentStorage::initializeArenaTable() {
+  if (baseDir == 0)
+    return False;
+  ScanDir storageDir(baseDir, arenaFilenameWildcard);
+  SizeType number = storageDir.entries();
+  if (number &lt; 0) 
+    return False;
+  ArenaID aid = 0;
+  Arena *arena = new Arena(aid, &quot;/dev/zero&quot;);
+  arenaTable += arena;
+  arena = 0;
+  const char *storageFilename = 0;
+  char storageFile[1024];
+  storageDir.initFilter(); 
+  while ((storageFilename = storageDir.getNextEntry()) != 0) {
+    strcpy(storageFile, baseDir);
+    strcat(storageFile, &quot;/&quot;);
+    strcat(storageFile, storageFilename);
+    FileStat fs(storageFile);
+    if (!(fs.isRegularFile() &amp;&amp; 
+        fs.isReadable() &amp;&amp; 
+        fs.isWritable()))
+      continue;
+    istrstream iss(storageFilename);
+    iss.scan(arenaFilenameFormat, &amp;aid);
+#ifdef DEBUG
+    cerr &lt;&lt; &quot;initializing Arena &quot; &lt;&lt; storageFile &lt;&lt; endl;
+#endif
+    arena = new Arena(aid, storageFile);
+    if (arena-&gt;getKey() == aid) {
+      arenaTable += arena;
+    } else {
+      delete arena;
+      return False;
+    }
+  }
+  return True;
+}
+
+BoolType PersistentStorage::initializeEntryTable() {
+  SizeType entrySize;
+  char entryFilePath[1024];
+  
+  if (baseDir == 0)
+    return False;
+  strcpy(entryFilePath, baseDir);
+  strcat(entryFilePath, &quot;/&quot;);
+  strcat(entryFilePath, entryPointTableFilename);
+
+  RawFile entryFile(entryFilePath);
+
+  if (entryFile.exists() &amp;&amp; !entryFile.isRegularFile()) 
+    return False; // file type is inappropriate
+
+  if (entryFile.exists()) {
+    entrySize = entryFile.getSize(); // get the size of the file in bytes
+    if (entrySize &lt; (SizeType)sizeof(Entry))
+      return False;
+    entryFile.open();
+    entrySize /= sizeof(Entry);
+    Entry *buf = (Entry *)new char[entrySize * sizeof(Entry)];
+    entrySize = 
+      entryFile.read((void *)buf, entrySize * sizeof(Entry));
+    entryFile.close();
+    if (entrySize &lt; (SizeType)sizeof(Entry)) {
+      delete buf;
+      return False;
+    }
+    entrySize /= sizeof(Entry);
+    entryTable.SortedObjectTable(buf, entrySize);
+    if (entryTable.getSize() &lt; entrySize) {
+      delete buf;
+      return False;
+    }
+    delete buf;
+  } else {
+    // the file does not exist
+    entrySize = 0;
+  }
+  SizeType index;
+  SortedObjectTable&lt;Entry, EntryID&gt; invalidEntries;
+  for (index = 0; index &lt; entrySize; index++) {
+    Entry entry(entryTable(index));
+    if (entry.entryPoint.grab() == 0)
+      invalidEntries += entry;
+    else
+      entry.entryPoint.release();
+  }
+  for (index = 0; index &lt; invalidEntries.getSize(); index++) {
+    entryTable -= invalidEntries(index).getKey();
+  }
+  return True;
+}
+
+SizeType PersistentStorage::cleanUp(BoolType completely) {
+  SizeType before;
+  if ((before = totalWindowSize) &lt; maxTotalWindowSize) 
+    return 0;
+  SizeType tableSize = arenaTable.getSize();
+  SizeType index = tableSize - 1;
+  SizeType size = 0;
+  while (index &gt; 0) {
+    Arena *arena = arenaTable(index);
+    size += arena-&gt;cleanUp(completely);
+    if (!completely &amp;&amp; size &gt; maxTotalWindowSize / 4)
+      break;
+    index--;
+  }
+#ifdef DEBUG
+  cerr &lt;&lt; &quot;\nPersistentStorage::cleanUp before &quot;
+       &lt;&lt; before &lt;&lt; &quot; after &quot; &lt;&lt; totalWindowSize 
+       &lt;&lt; &quot; size &quot; &lt;&lt; size &lt;&lt; endl;
+#endif
+  return size;
+}
+
+inline PersistentStorage *PersistentStorage::getThePS() {
+  return ps;
+}
+
+// member functions of Arena 
+
+// constructor
+Arena::Arena(ArenaID aid, const char *storageFile) : 
+  arenaID(aid), masterWindow(storageFile) {
+    if (aid == 0) { // non-persistent arena
+      arenaSize = PersistentStorage::pageSize;
+      freeList = 0;
+      topChunk = 0;
+      maximumFreeChunk = 0;
+      if (grow()) {
+        arenaID = aid;
+      } else {
+        arenaID = -1;
+      }
+    } else { // persistent arena
+      FileStat fs(storageFile);
+      if (fs.isRegularFile() &amp;&amp; 
+          fs.isReadable() &amp;&amp;
+          fs.isWritable()) {
+        masterWindow.MMap::map(0, PersistentStorage::pageSize);
+        ArenaInitialBlock *aib = 
+          (ArenaInitialBlock *)masterWindow.getAddr();
+        if (aib != 0 &amp;&amp; 
+            aib-&gt;arenaID == arenaID) {
+          arenaSize = aib-&gt;arenaSize;
+          freeList = aib-&gt;freeList;
+          topChunk = aib-&gt;topChunk;
+          maximumFreeChunk = 0;
+          arenaID = aid;
+        } else {
+          arenaID = -1;
+        }
+      } else if (!fs.exists()) { // storage file should be created
+        RawFile sf(storageFile);
+        sf.create();
+        // create initial block
+        char *buf = new char[PersistentStorage::pageSize];
+        memset((PointerType)buf, 0, PersistentStorage::pageSize);
+        sf.write(buf, PersistentStorage::pageSize);
+        delete buf;
+        sf.close();
+        // re-create masterWindow
+        masterWindow.Window(storageFile);
+        masterWindow.MMap::map(0,PersistentStorage::pageSize);
+        ArenaInitialBlock *aib =
+          new(masterWindow.getAddr()) ArenaInitialBlock(aid);
+        arenaSize = aib-&gt;arenaSize = PersistentStorage::pageSize;
+        freeList = aib-&gt;freeList = 0;
+        topChunk = aib-&gt;topChunk = 0;
+        maximumFreeChunk = 0;
+        if (grow()) { // generate a free block
+          masterWindow.sync(MS_ASYNC);
+          arenaID = aid; // successful
+        } else {
+          arenaID = -1;
+        }
+      } else { // erraneous storage file
+        arenaID = -1;
+      }
+    }
+}
+
+// destructor
+Arena::~Arena() {
+  masterWindow.sync(MS_ASYNC);
+  synchronize();
+  windowTable.removeAll();
+}
+
+void Arena::printStatus() {
+  SizeType size;
+  ostream &amp;os = cerr;
+  os &lt;&lt; &quot;Arena {\n  arenaID &quot; &lt;&lt; arenaID
+     &lt;&lt; &quot;\n  arenaSize &quot; &lt;&lt; arenaSize 
+     &lt;&lt; &quot;\n  storageFile &quot; &lt;&lt; masterWindow.getFileName() 
+     &lt;&lt; &quot;\n  freeList &quot; &lt;&lt; freeList
+     &lt;&lt; &quot;\n  topChunk &quot; &lt;&lt; topChunk
+     &lt;&lt; &quot;\n  windowTable {\n  size &quot; &lt;&lt; (size = windowTable.getSize())
+     &lt;&lt; &quot;\n&quot;;
+  Window *window;
+  SizeType index;
+  for (index = 0; index &lt; size; index++) {
+    window = windowTable(index);
+    window-&gt;printStatus();
+  }
+  if (freeList != 0) {
+    OffsetChunkPair fChunk(freeList);
+    os &lt;&lt; &quot;freeList {\n&quot;;
+    do {
+      if (fChunk.map(this) == 0) 
+        break;
+      os &lt;&lt; &quot;freeChunk &quot; &lt;&lt; (OffsetType)fChunk 
+         &lt;&lt; &quot; size &quot; &lt;&lt; PChunk(fChunk)-&gt;getSize() 
+         &lt;&lt; &quot; backward &quot; &lt;&lt; PChunk(fChunk)-&gt;backward
+         &lt;&lt; &quot; forward &quot; &lt;&lt; PChunk(fChunk)-&gt;forward
+         &lt;&lt; &quot;\n&quot;;
+      fChunk = PChunk(fChunk)-&gt;forward;
+    } while (fChunk != freeList);
+    os &lt;&lt; &quot;} // freeList\n&quot;;
+  }
+  os &lt;&lt; &quot;} // Arena\n&quot;;
+}
+
+BoolType Arena::objectTableCheck() {
+  ostream &amp;os = cerr;
+
+  BoolType Consistent = True;
+  SizeType windowIndex = 0;
+  SizeType windowTableSize = windowTable.getSize();
+  for (; windowIndex &lt; windowTableSize; windowIndex++) {
+    Window *current = windowTable(windowIndex);
+    Window *before = windowTable(windowIndex - 1);
+    Window *after = windowTable(windowIndex + 1);
+    if (before != 0 &amp;&amp; current-&gt;isSeparatedFrom(*before))
+      before = 0;
+    if (after != 0 &amp;&amp; current-&gt;isSeparatedFrom(*after))
+      after = 0;
+
+    SizeType objectIndex = 0;
+    SizeType objectTableSize = current-&gt;objectTable.getSize();
+    BoolType consistent = True;
+    for (; objectIndex &lt; objectTableSize; objectIndex++) {
+      OffsetType off = current-&gt;objectTable(objectIndex).getOffset();
+      if (current-&gt;objectTable(objectIndex).isFragmented()) {
+        if (before != 0)
+          if (before-&gt;isWithinRange(off)) 
+            if (before-&gt;objectTable[off].isFragmented())
+              consistent = False;
+      } else {
+        if (after != 0)
+          if (after-&gt;isWithinRange(off))
+            if (!after-&gt;objectTable[off].isFragmented())
+              consistent = False;
+      }
+      if (current-&gt;objectTable(objectIndex).isInUse()) {
+        if (before != 0)
+          if (before-&gt;isWithinRange(off)) 
+            if (!before-&gt;objectTable[off].isInUse())
+              consistent = False;
+        if (after != 0)
+          if (after-&gt;isWithinRange(off)) 
+            if (!after-&gt;objectTable[off].isInUse())
+              consistent = False;
+      } else {
+        if (before != 0)
+          if (before-&gt;isWithinRange(off)) 
+            if (before-&gt;objectTable[off].isInUse())
+              consistent = False;
+        if (after != 0)
+          if (after-&gt;isWithinRange(off)) 
+            if (after-&gt;objectTable[off].isInUse())
+              consistent = False;
+      }
+    }
+    if (!consistent) {
+      Consistent = False;
+      os &lt;&lt; &quot;Arena::objectTableCheck {\n&quot;;
+      if (before != 0) {
+        os &lt;&lt; &quot;before &quot;;
+        before-&gt;printStatus();
+      }
+      os &lt;&lt; &quot;current &quot;;
+      current-&gt;printStatus();
+      if (after != 0) {
+        os &lt;&lt; &quot;after &quot;;
+        after-&gt;printStatus();
+      }
+      os &lt;&lt; &quot;} // Arena::objectTableCheck&quot; &lt;&lt; endl;
+    }
+  }
+  return Consistent;
+}
+
+
+
+OffsetType Arena::allocate(SizeType size) {
+  size = alignChunkSize(size);
+  OffsetChunkPair p = findChunk(size);
+  if (p != 0) { // found in freeList
+    OffsetChunkPair q = split(p, size);
+    removeRedundantWindow(p);
+    if (q != 0) freeList = q.offset;
+  } else { // not found in freeList
+    p = splitTopChunk(size);
+    removeRedundantWindow(p);
+  }
+#ifdef DEBUG
+  if (freeList != 0 &amp;&amp; !isValidFreeChunk(freeList)) 
+    breakpoint();
+#endif
+  if (p != 0) {
+    if (p.map(this, False) != 0) {
+      p.chunk-&gt;forward = p.chunk-&gt;backward = 0; // non-demanding operation
+      return p.offset;
+    } else {
+      return 0;
+    }
+  } else {
+    return 0;
+  }
+}
+
+BoolType Arena::destroy(OffsetType o) {
+#ifdef DEBUG
+  cerr &lt;&lt; &quot;Arena::destroy &quot; &lt;&lt; o &lt;&lt; &quot; &quot;;
+#endif
+  if (o == 0) {
+#ifdef DEBUG
+    cerr &lt;&lt; &quot;Arena::destroy try to destroy 0&quot; &lt;&lt; endl;
+#endif
+    return False;
+  }
+  BoolType success = True;
+  if (isGrabbed(o)) { // must be grabbed exclusively
+    if (release(o)) {
+      success = destroyChunk(o);
+      removeRedundantWindow(o);
+#ifdef DEBUG
+      if (getObject(freeList, True).isInUse()) {
+        cerr &lt;&lt; &quot;freeList &quot; &lt;&lt; freeList &lt;&lt; &quot; is InUse &quot; &lt;&lt; endl;
+        STATUS(&quot;freeList&quot;);
+      }
+#endif
+      if (success) {
+        return consolidateIntoTopChunk();
+      } else {
+#ifdef DEBUG
+        cerr &lt;&lt; &quot;Arena::destroy consolidateIntoTopChunk failed&quot; &lt;&lt; endl;
+#endif
+        return False;
+      }
+    } else { // release failed
+#ifdef DEBUG
+      cerr &lt;&lt; &quot;Arena::destroy release failed&quot; &lt;&lt; endl;
+#endif
+      return False;
+    }
+  } else { // attempt to destroy non-grabbed object
+#ifdef DEBUG
+    cerr &lt;&lt; &quot;Arena::destroy not grabbed&quot; &lt;&lt; endl;
+#endif
+    return False;
+  }
+}
+
+Chunk *Arena::map(OffsetType o) {
+  Window *window = mapWindow(o);
+  o &amp;= PersistentOffset::offsetMask;
+  return window != 0 ? window-&gt;map(o) : 0;
+}
+
+Window *Arena::mapWindow(OffsetType o) {
+  BoolType mapObjects = 
+    o &amp; PersistentOffset::inUseMask ? False : True;
+  BoolType validateObject = 
+    o &amp; PersistentOffset::fragmentedMask ? False : True;
+  o &amp;= ~PersistentOffset::inUseMask;
+  Window *window = windowTable[o];
+  if (window != 0) { // already mapped
+    if (!mapObjects) { // anywhere
+      o &amp;= PersistentOffset::offsetMask;
+      return window;
+    }
+    o &amp;= PersistentOffset::offsetMask;
+    if (window-&gt;isValid(o)) { // maybe fragmented
+      return window;
+    } else {
+      return 0;
+    }
+  } else { // not mapped
+    if (arenaID &gt; 0) { // persistent
+      o &amp;= PersistentOffset::offsetMask;
+      // the offset is out of the Arena
+      if (!(PersistentStorage::pageSize &lt;= o &amp;&amp; o &lt; arenaSize)) {
+        return 0;
+      }
+
+      OffsetType begin;
+      OffsetType end;
+      SizeType size;
+      // SizeType windowTableSize = windowTable.getSize();
+      SizeType index = windowTable.searchByKey(o);
+      Window *before = windowTable(index - 1);
+      Window *after = windowTable(index);
+      
+#ifdef DEBUG
+      if (before != 0 || after != 0)
+        cerr &lt;&lt; &quot;Window::mapWindow before != 0 &amp;&amp; after != 0&quot; &lt;&lt; endl;
+#endif
+
+      // calculate the minimum range of mapping
+      if (validateObject) {
+        BoolType withinBefore = before != 0 &amp;&amp; before-&gt;isWithinRange(o);
+        BoolType withinAfter = after != 0 &amp;&amp; after-&gt;isWithinRange(o);
+        size = 0;
+        begin = o;
+        if (withinBefore) {
+          // get the size from the before Window
+          size = before-&gt;map(o)-&gt;getSize();
+        } else if (withinAfter) {
+          // get the size from the after Window
+          size = after-&gt;map(o)-&gt;getSize();
+        } else if (after != 0) {
+          // get the size from the first object of the after Window
+          OffsetChunkPair next(after-&gt;objectTable(0).getOffset());
+          if (next.map(after) != 0) 
+            if ((OffsetType)next - PChunk(next)-&gt;getPrevSize() == o)
+              size = PChunk(next)-&gt;getPrevSize();
+        }
+        if (size &gt; 0) {
+          // the object size detected
+          end = begin + size;
+        } else {
+          // the object size not detected
+          // the size may be less than or equal to minimunChunkSize * 2
+          end = o + getMinimumChunkSize() * 2;
+          // the range must not exceed arenaSize
+          if (end &gt; arenaSize)
+            end = arenaSize;
+          // the range must not contain 
+          // the first object of the after Window
+          if (after != 0 &amp;&amp; after-&gt;objectTable.getSize() &gt; 0) {
+            OffsetChunkPair next(after-&gt;objectTable(0).getOffset());
+            if ((OffsetType)next &lt; end)
+              end = next;
+          }
+        }
+      } else { // validation not required
+        // just one chunk
+        begin = o;
+        end = o + sizeof(Chunk);
+      }
+      
+      // grow from the minimum requirement
+      if (end - begin &lt; PersistentStorage::standardWindowSize) {
+        // the range should grow up
+        OffsetType lowerLimit = begin;
+        OffsetType upperLimit = end;
+        // detect lowerLimit
+        if (before != 0) {
+          OffsetType beforeEnd = 
+            (OffsetType)before-&gt;getOffset() + 
+            (OffsetType)before-&gt;getLength();
+          if (beforeEnd &lt;= begin) {
+            SizeType index = before-&gt;objectTable.getSize() - 1;
+            if (index &gt;= 0) {
+              if (before-&gt;objectTable(index).isFragmented()) {
+                lowerLimit = before-&gt;objectTable(index).getOffset();
+              } else {
+                lowerLimit = beforeEnd;
+              }    
+            }
+          }
+        } else { // before == 0
+          lowerLimit = PersistentStorage::pageSize;
+        }
+        // detect upperLimit
+        if (after != 0) {
+          OffsetType afterBegin = (OffsetType)after-&gt;getOffset();
+          if (end &lt; afterBegin) {
+            upperLimit = after-&gt;objectTable(0).getOffset();
+          }
+        } else { // after == 0
+          upperLimit = arenaSize;
+        }
+        OffsetType tmp = end - PersistentStorage::standardWindowSize;
+        if (lowerLimit &lt; tmp)
+          lowerLimit = tmp;
+        tmp = begin + PersistentStorage::standardWindowSize;
+        if (tmp &lt; upperLimit)
+          upperLimit = tmp;
+        begin = lowerLimit;
+        end = upperLimit;
+      }
+      begin &amp;= ~(PersistentStorage::pageSize - 1);
+
+      if (begin &lt; end) {
+        size = end - begin;
+#ifdef DEBUG
+        if ((before != 0 &amp;&amp; before-&gt;isWithinRange(begin)) ||
+            (after != 0 &amp;&amp; after-&gt;isWithinRange(end))) {
+          cerr &lt;&lt; &quot;Overlapped Window mapping &quot; 
+               &lt;&lt; &quot; begin &quot; &lt;&lt; begin &lt;&lt; &quot; end &quot; &lt;&lt; end 
+               &lt;&lt; &quot; object &quot; &lt;&lt; o &lt;&lt; endl;
+          cerr &lt;&lt; &quot;before Window &quot;;
+          if (before != 0) {
+            before-&gt;printStatus();
+          } else {
+            cerr &lt;&lt; &quot;null &quot;;
+          }
+          cerr &lt;&lt; &quot;after Window &quot;;
+          if (after != 0) {
+            after-&gt;printStatus();
+          } else {
+            cerr &lt;&lt; &quot;null &quot;;
+          }
+        }
+#endif
+        if (mapObjects) {
+          window = 
+            new Window(masterWindow, begin, size, o, before, after, this,
+                       getMinimumChunkSize());
+#ifdef DEBUG
+          if ((before != 0 &amp;&amp; before-&gt;isWithinRange(begin)) ||
+              (after != 0 &amp;&amp; after-&gt;isWithinRange(end))) {
+            cerr &lt;&lt; &quot;just mapped&quot; &lt;&lt; endl;
+            window-&gt;printStatus();
+          }
+#endif
+          if (window-&gt;isValid(o)) {
+            windowTable += window;
+            return window;
+          } else {
+#ifdef DEBUG
+            breakpoint();
+#endif
+            delete window;
+            return 0;
+          }
+        } else {
+          window = 
+            new Window(masterWindow, begin, size, 0, 0, 0, this,
+                       getMinimumChunkSize());
+          if (window-&gt;isWithinRange(o)) {
+            windowTable += window;
+            return window;
+          } else {
+#ifdef DEBUG
+            breakpoint();
+#endif
+            delete window;
+            return 0;
+          }
+        }           
+      } else {
+#ifdef DEBUG
+        breakpoint();
+#endif
+        return 0;
+      }
+    } else { // non-persistent
+      return 0;
+    }
+  }
+}
+
+BoolType Arena::synchronize(OffsetType o) {
+  if (arenaID &gt; 0) { // persistent
+    if (o != 0) {
+      Window *window = windowTable[o];
+      if (window != 0) 
+        window-&gt;sync(MS_SYNC);
+      return True;
+    } else {
+      SizeType size = windowTable.getSize();
+      SizeType index;
+      Window *window;
+      for (index = 0; index &lt; size; index++) {
+        window = windowTable(index);
+        if (window != 0 &amp;&amp; window-&gt;isDirty()) {
+          window-&gt;sync(MS_SYNC);
+          window-&gt;clearDirty();
+        }
+      }
+      masterWindow.sync(MS_SYNC);
+      return True;
+    }
+  } else { // non-persistent
+    return True;
+  }
+}
+
+SizeType Arena::cleanUp(BoolType completely) {
+  PersistentStorage *p = PersistentStorage::getThePS();
+  if (p != 0 &amp;&amp; 
+      p-&gt;totalWindowSize &gt; PersistentStorage::maxTotalWindowSize) {
+    Window *window;
+    SizeType tableSize = windowTable.getSize();
+    SizeType index;
+    SortedPointerTable&lt;Window, OffsetType&gt; removableWindows(tableSize);
+    SizeType memorySize = 0;
+    for (index = 0; index &lt; tableSize; index++) {
+      window = windowTable(index);
+      if (window-&gt;isCompletelyReleased()) {
+        removableWindows += window;
+        memorySize += window-&gt;getLength();
+      }
+      if (!completely &amp;&amp;
+          memorySize &gt; PersistentStorage::maxTotalWindowSize / 4) 
+        break;
+    }
+    if ((tableSize = removableWindows.getSize()) &gt; 0) {
+      for (index = 0; index &lt; tableSize; index++) {
+        Window *window = removableWindows(index);
+        window-&gt;sync(MS_ASYNC);
+        windowTable -= window;
+      }
+      removableWindows.removeAll();
+    }
+    return memorySize;
+  } else { // cleaning up is unnecessary
+    return 0;
+  }
+}
+
+
+// private member functions of Arena
+
+OffsetChunkPair Arena::findChunk(SizeType size) {
+#ifdef DEBUG
+  cerr &lt;&lt; &quot;Arena::findChunk &quot; &lt;&lt; freeList &lt;&lt; &quot; &quot;;
+#endif
+  if (freeList == 0) 
+    return 0;
+
+  if (maximumFreeChunk &gt; 0 &amp;&amp; maximumFreeChunk &lt; size)
+    return 0;
+
+  OffsetChunkPair fitChunk(0);
+  Window *window;
+
+#if 0  
+  OffsetChunkPair completeFitChunk(0);
+  SizeType windowTableSize = windowTable.getSize();
+  SizeType windowIndex = 0;
+  SizeType tableSize;
+  SizeType index;
+  SizeType freeChunkSize;
+  SizeType minimum = getMinimumChunkSize();
+  // search first in the mapped Windows
+  for (windowIndex = 0; 
+       windowIndex &lt; windowTableSize; 
+       windowIndex++) {
+    window = windowTable(windowIndex);
+    index = 0;
+    tableSize = window-&gt;objectTable.getSize();
+    while (index &lt; tableSize) {
+      if (!window-&gt;objectTable(index).isInUse()) {
+        completeFitChunk = window-&gt;objectTable(index).getOffset();
+        if (index + 1 &lt; tableSize) {
+          freeChunkSize = 
+            window-&gt;objectTable(index + 1).getOffset() - 
+            completeFitChunk;
+        } else {
+          completeFitChunk.map(window);
+          freeChunkSize = PChunk(completeFitChunk)-&gt;getSize();
+        }
+        if (freeChunkSize &gt;= size) {
+          fitChunk = completeFitChunk;
+          if (index + 1 &lt; tableSize) {
+            return completeFitChunk;
+          } else {
+            if (freeChunkSize - size &gt;= minimum) {
+              // really split
+              if (window-&gt;isWithinRange((OffsetType)completeFitChunk + 
+                                        size + sizeof(Chunk) - 1)) {
+                return completeFitChunk;
+              }
+            } else { 
+              // not split, allocate the whole Chunk
+              if (window-&gt;isWithinRange((OffsetType)completeFitChunk + 
+                                        size - 1)) {
+                return completeFitChunk;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  if ((OffsetType)fitChunk != 0)
+    return fitChunk;
+#endif
+  fitChunk = freeList;
+  OffsetType nextChunk;
+  OffsetType maxChunk = freeList;
+  OffsetType topFreeChunk = 0;
+  BoolType tooFar = False;
+  SizeType s = 0;
+  SizeType max = 0;
+  CounterType probeCount = 0;
+  do {
+    window = mapWindow((OffsetType)fitChunk | 
+                       PersistentOffset::fragmentedMask);
+    if (fitChunk.map(window) == 0) {
+      cerr &lt;&lt; &quot;fitChunk is null&quot; &lt;&lt; endl;
+      return 0;
+    }
+    if (arenaID &gt; 0) {
+      // this grabbing should be changed to read-only grabbing
+      window-&gt;grab(fitChunk | PersistentOffset::fragmentedMask);
+#ifdef DEBUG
+      SizeType cleanedUp = cleanUp();
+      if (cleanedUp &gt; 0) 
+        cerr &lt;&lt; &quot;clean up &quot; &lt;&lt; cleanedUp &lt;&lt; endl;
+#else
+      cleanUp();
+#endif
+    }
+#ifdef DEBUG
+    cerr &lt;&lt; &quot;fitChunk &quot; &lt;&lt; (OffsetType)fitChunk 
+         &lt;&lt; &quot; size &quot; &lt;&lt; PChunk(fitChunk)-&gt;getSize()  
+         &lt;&lt; &quot; backward &quot; &lt;&lt; PChunk(fitChunk)-&gt;backward
+         &lt;&lt; &quot; forward &quot; &lt;&lt; PChunk(fitChunk)-&gt;forward &lt;&lt; endl;
+#endif
+    nextChunk = PChunk(fitChunk)-&gt;backward;
+    s = PChunk(fitChunk)-&gt;getSize();
+    if (max &lt; s) {
+      maxChunk = fitChunk;
+      max = s;
+    }
+    if (arenaID &gt; 0) {
+      window-&gt;release(fitChunk | PersistentOffset::fragmentedMask);
+    }    
+    probeCount++;
+    if (s &gt;= size) {
+      break; // first fit scheme
+    }
+    fitChunk = nextChunk;
+    if (freeList - fitChunk &gt; 
+        PersistentStorage::maxTotalWindowSize / 4) {
+      tooFar = True;
+      break;
+    }
+    if (topFreeChunk == 0 &amp;&amp; 
+        freeList &lt; (OffsetType)fitChunk)
+      topFreeChunk = fitChunk;
+    if (topFreeChunk != 0 &amp;&amp;
+        topFreeChunk - (OffsetType)fitChunk &gt; 
+        PersistentStorage::maxTotalWindowSize / 4) {
+      tooFar = True;
+      break;
+    }
+  } while (fitChunk != freeList);
+  if (s &gt;= size) {
+    return fitChunk;
+  } else if (!tooFar) {
+    freeList = maxChunk;
+    maximumFreeChunk = max;
+    return 0;
+  } else { // tooFar
+    // freeList = fitChunk;
+    return 0;
+  }
+}
+
+OffsetChunkPair Arena::splitTopChunk(SizeType size) {
+  OffsetChunkPair tChunk(topChunk);
+  tChunk.map(this, True, False);
+  if (PChunk(tChunk) == 0 ||
+      PChunk(tChunk)-&gt;getSize() &lt; size + (SizeType)sizeof(Chunk)) 
+    return 0; // topChunk is too small
+  // put new topChunk
+  SizeType tChunkSize = PChunk(tChunk)-&gt;getSize();
+  PChunk(tChunk)-&gt;setSize(size);
+  PChunk(tChunk)-&gt;setPrevInUse();
+
+  setObjectFlag(tChunk, True, size);
+
+  OffsetChunkPair newTop(topChunk + size);
+  newTop.map(this, True, True);
+  new(PChunk(newTop)) Chunk(size, tChunkSize - size, True, 0, 0);
+  topChunk = newTop;
+  insertObject(topChunk, False);
+
+  newTop = topChunk;
+  if (newTop.map(this, True) == 0) {
+    STATUS(&quot;Arena::splitTopChunk newTop is null\n&quot;);
+  } else {
+    if ((OffsetType)newTop + PChunk(newTop)-&gt;getSize() != arenaSize) {
+      STATUS(&quot;Arena::splitTopChunk insertion of newTopChunk failed\n&quot;);
+    }
+  }
+
+  updateInitialBlock();
+  return tChunk;
+}
+
+OffsetChunkPair Arena::split(OffsetChunkPair fChunk, SizeType size) {
+  fChunk.map(this);
+  if (PChunk(fChunk) == 0) {
+    STATUS(&quot;Arena::split() fChunk is null\n&quot;);
+    return 0;
+  }
+  OffsetChunkPair bFree(PChunk(fChunk)-&gt;backward);
+  bFree.map(this);
+  if (PChunk(bFree) == 0) {
+    STATUS(&quot;Arena::split() bFree is null\n&quot;);
+    return 0;
+  }
+  OffsetChunkPair fFree(PChunk(fChunk)-&gt;forward);
+  fFree.map(this);
+  if (PChunk(fFree) == 0) {
+    STATUS(&quot;Arena::split() fFree is null\n&quot;);
+    return 0;
+  }
+  SizeType splitFreeChunkSize = PChunk(fChunk)-&gt;getSize() - size;
+  if (splitFreeChunkSize &lt; getMinimumChunkSize()) { 
+    // cannot split, then grab the whole
+    if (fChunk == bFree &amp;&amp; fChunk == fFree) { 
+      freeList = 0; // fChunk is the last free Chunk
+    } else {
+      // maybe fFree == bFree
+      PChunk(bFree)-&gt;forward = fFree;
+      PChunk(fFree)-&gt;backward = bFree;
+      if (fChunk == freeList) {
+        freeList = bFree;
+      }
+    }
+    OffsetChunkPair nChunk(fChunk.getNextChunk(this));
+    nChunk.map(this);
+    if (PChunk(nChunk) == 0) {
+      STATUS(&quot;Arena::split() nChunk is null\n&quot;);
+      return 0;
+    }
+    PChunk(nChunk)-&gt;setPrevInUse();
+
+    setObjectFlag(fChunk, True, 0);
+    return 0;
+  } else { // split 
+    // get the nChunk
+    OffsetChunkPair nChunk(fChunk.getNextChunk(this));
+    nChunk.map(this);
+    if (PChunk(nChunk) == 0) {
+      STATUS(&quot;Arena::split() nChunk is null\n&quot;);
+      return 0;
+    }
+    // set the size
+    PChunk(fChunk)-&gt;setSize(size);
+    PChunk(nChunk)-&gt;setPrevSize(splitFreeChunkSize);
+
+    // put new splitFreeChunk
+    OffsetChunkPair splitFreeChunk((OffsetType)fChunk + size);
+    splitFreeChunk.map(this, True, True);
+    if (PChunk(splitFreeChunk) == 0) {
+      STATUS(&quot;Arena::split() splitFreeChunk is null\n&quot;);
+      return 0;
+    }
+    new(PChunk(splitFreeChunk)) 
+      Chunk(size, splitFreeChunkSize, True, bFree, fFree);
+    if (bFree == fChunk &amp;&amp; fFree == fChunk) {
+      // double linked to itself
+      PChunk(splitFreeChunk)-&gt;forward = 
+        PChunk(splitFreeChunk)-&gt;backward = splitFreeChunk;
+    } else {
+      PChunk(bFree)-&gt;forward = PChunk(fFree)-&gt;backward 
+        = splitFreeChunk;
+    }
+    // update freeList
+    if (fChunk == freeList) {
+      freeList = splitFreeChunk;
+    }
+    // splitFreeChunk object
+    insertObject(splitFreeChunk, False);
+
+    // update objectTables
+    // fChunk object
+    setObjectFlag(fChunk, True, size);
+
+    updateInitialBlock();
+    return splitFreeChunk;
+  }
+}
+
+BoolType Arena::consolidateIntoTopChunk() {
+  OffsetChunkPair top(topChunk);
+  top.map(this);
+  if (PChunk(top) == 0) {
+    STATUS(&quot;Arena::consolidateIntoTopChunk() top is null\n&quot;);
+    return False;
+  }
+  if (PChunk(top)-&gt;isPrevInUse()) // prevChunk is in use
+    return True;
+  if (PChunk(top)-&gt;getPrevSize() == 0) // no region is allocated
+    return True;
+  OffsetChunkPair fChunk(top.getPrevChunk(this));
+  fChunk.map(this);
+  if (PChunk(fChunk) == 0) {
+    STATUS(&quot;Arena::consolidateIntoTopChunk() prev of top is null\n&quot;);
+    return False;
+  }
+  OffsetChunkPair fFree(PChunk(fChunk)-&gt;forward);
+  OffsetChunkPair bFree(PChunk(fChunk)-&gt;backward);
+  if (fFree == 0 || bFree == 0) {
+    STATUS(&quot;Arena::consolidateIntoTopChunk() freeList corrupted\n&quot;);
+    return False;
+  }
+  // extract fChunk from freeList
+  fFree.map(this);
+  if (PChunk(fFree) == 0) {
+    STATUS(&quot;Arena::consolidateIntoTopChunk() fFree is null\n&quot;);
+    return False;
+  }
+  bFree.map(this);
+  if (PChunk(bFree) == 0) {
+    STATUS(&quot;Arena::consolidateIntoTopChunk() bFree is null\n&quot;);
+    return False;
+  }
+  // extract and remove fChunk from freeList
+  PChunk(fFree)-&gt;backward = bFree;
+  PChunk(bFree)-&gt;forward = fFree;
+
+  // update freeList
+  if (fChunk == freeList) {
+    // bFree may be fChunk
+    freeList = (fChunk == bFree) ? 0 : bFree;
+  }
+
+  // modify fChunk, which will become a new topChunk
+  SizeType newTopChunkSize = 
+    PChunk(fChunk)-&gt;getSize() + PChunk(top)-&gt;getSize();
+  PChunk(fChunk)-&gt;setSize(newTopChunkSize); // fChunk is the new topChunk
+
+  // remove the old topChunk object
+  if (!removeObject(top)) {
+    STATUS(&quot;Arena::consolidateIntoTopChunk() removeObject(top) failed\n&quot;);
+    return False;
+  }
+  // update topChunk
+  topChunk = fChunk;
+
+  // update objectTables
+  setObjectFlag(fChunk, False, newTopChunkSize);
+  removeRedundantWindow(top);
+  updateInitialBlock();
+  return True;
+}
+
+BoolType Arena::destroyChunk(OffsetType o) {
+  OffsetChunkPair aChunk(o);
+  aChunk.map(this, False);
+  if (PChunk(aChunk) == 0) {
+    STATUS(&quot;Arena::destroyChunk() aChunk is null\n&quot;);
+    return False;
+  }
+  if (PChunk(aChunk)-&gt;isPrevInUse()) {
+    OffsetChunkPair nChunk = aChunk.getNextChunk(this);
+    nChunk.map(this);
+    if (PChunk(nChunk) == 0) {
+      STATUS(&quot;Arena::destroyChunk() nChunk is null\n&quot;);
+      return False;
+    }
+    OffsetChunkPair nnChunk(0); // the next of the next chunk
+    if (nChunk != topChunk) {
+      nnChunk = nChunk.getNextChunk(this);
+      nnChunk.map(this);
+      if (PChunk(nnChunk) == 0) {
+        STATUS(&quot;Arena::destroyChunk() nnChunk is null\n&quot;);
+        return False;
+      }
+    }
+    if (nChunk != topChunk &amp;&amp; 
+        !PChunk(nnChunk)-&gt;isPrevInUse()) {
+#ifdef DESTROYLOG
+      cerr &lt;&lt; &quot;aaf &quot; &lt;&lt; &quot;aChunk &quot; &lt;&lt; aChunk
+           &lt;&lt; &quot;nChunk &quot; &lt;&lt; nChunk &lt;&lt; endl;
+#endif
+      // consolidate with nChunk
+      OffsetChunkPair fFree(PChunk(nChunk)-&gt;forward);
+      OffsetChunkPair bFree(PChunk(nChunk)-&gt;backward);
+      // calculate the new size
+      SizeType newSize = 
+        PChunk(aChunk)-&gt;getSize() + PChunk(nChunk)-&gt;getSize();
+      // set the new size
+      // remove nChunk from objectTables
+      if (!removeObject(nChunk)) {
+        STATUS(&quot;Arena::destroyChunk() removeObject(nChunk) failed\n&quot;);
+        return False;
+      }
+
+      PChunk(aChunk)-&gt;setSize(newSize);
+      PChunk(nnChunk)-&gt;setPrevSize(newSize);
+
+      // in case freeList has only one element
+      if (fFree == nChunk) 
+        fFree = aChunk;
+      if (bFree == nChunk)
+        bFree = aChunk;
+
+      // setup aChunk as a new free Chunk
+      PChunk(aChunk)-&gt;forward = fFree;
+      PChunk(aChunk)-&gt;backward = bFree;
+      fFree.map(this);
+      if (PChunk(fFree) == 0) {
+        STATUS(&quot;Arena::destroyChunk() fFree is null\n&quot;);
+        return False;
+      }
+      bFree.map(this);
+      if (PChunk(bFree) == 0) {
+        STATUS(&quot;Arena::destroyChunk() bFree is null\n&quot;);
+        return False;
+      }
+      // update freeList
+      PChunk(bFree)-&gt;forward = PChunk(fFree)-&gt;backward = aChunk;
+      if (nChunk == freeList) {
+        freeList = aChunk;
+      }
+
+      setObjectFlag(aChunk, False, newSize);
+      if (maximumFreeChunk &lt; newSize)
+        maximumFreeChunk = newSize;
+    } else {
+#ifdef DESTROYLOG
+      cerr &lt;&lt; &quot;aaa &quot; &lt;&lt; &quot;aChunk &quot; &lt;&lt; aChunk &lt;&lt; endl;
+#endif
+      // no consolidation
+      OffsetChunkPair fFree(0);
+      OffsetChunkPair bFree(0);
+      if (freeList == 0) {
+        freeList = bFree = fFree = aChunk;
+      } else {
+        Window *window = windowTable[aChunk];
+        if (window == 0) {
+          STATUS(&quot;Arena::destroyChunk() windowTable[aChunk] is null\n&quot;);
+          return False;
+        }
+        
+        // find the nearest free Chunk
+        bFree = findNearestFreeChunk(aChunk);
+#ifdef DEBUG
+        if (!isValidFreeChunk(bFree))
+          breakpoint();
+#endif
+        if (bFree != 0) {
+          if ((OffsetType)bFree &lt; aChunk) {
+            bFree.map(this);
+            if (PChunk(bFree) == 0) {
+              STATUS(&quot;Arena::destroyChunk() bFree is null\n&quot;);
+              return False;
+            }
+            fFree = PChunk(bFree)-&gt;forward;
+            if (bFree != fFree) {
+              while ((OffsetType)bFree &lt; fFree &amp;&amp; 
+                     (OffsetType)fFree &lt; aChunk) {
+                fFree.map(this);
+                if (PChunk(fFree) == 0) {
+                  STATUS(&quot;Arena::destroyChunk() fFree is null\n&quot;);
+                  return False;
+                }
+                bFree = fFree;
+                fFree = PChunk(fFree)-&gt;forward;
+              }
+            } 
+          } else { 
+            fFree = bFree;
+            fFree.map(this);
+            if (PChunk(fFree) == 0) {
+              STATUS(&quot;Arena::destroyChunk() fFree is null\n&quot;);
+              return False;
+            }
+            bFree = PChunk(fFree)-&gt;backward;
+            if (bFree != fFree) {
+              while ((OffsetType)bFree &lt; fFree &amp;&amp; 
+                     (OffsetType)bFree &gt; aChunk) {
+                bFree.map(this);
+                if (PChunk(bFree) == 0) {
+                  STATUS(&quot;Arena::destroyChunk() bFree is null\n&quot;);
+                  return False;
+                }
+                fFree = bFree;
+                bFree = PChunk(bFree)-&gt;backward;
+              }
+            } 
+          }
+        } else {
+          freeList = bFree = fFree = aChunk;
+        }
+      }
+      fFree.map(this);
+      if (PChunk(fFree) == 0) {
+        STATUS(&quot;Arena::destroyChunk() fFree is null\n&quot;);
+        return False;
+      }
+      bFree.map(this);
+      if (PChunk(bFree) == 0) {
+        STATUS(&quot;Arena::destroyChunk() bFree is null\n&quot;);
+        return False;
+      }
+
+      PChunk(nChunk)-&gt;clearPrevInUse();
+      PChunk(aChunk)-&gt;forward = fFree;
+      PChunk(aChunk)-&gt;backward = bFree;
+      PChunk(fFree)-&gt;backward = PChunk(bFree)-&gt;forward = aChunk;
+
+      
+      setObjectFlag(aChunk, False, 0);
+      if (maximumFreeChunk &lt; PChunk(aChunk)-&gt;getSize())
+        maximumFreeChunk = PChunk(aChunk)-&gt;getSize();
+    }
+  } else {
+    // pChunk is not in use
+    OffsetChunkPair pChunk(aChunk.getPrevChunk(this));
+    pChunk.map(this);
+    if (PChunk(pChunk) == 0) {
+      STATUS(&quot;Arena::destroyChunk() pChunk is null\n&quot;);
+      return False;
+    }
+    OffsetChunkPair nChunk(aChunk.getNextChunk(this));
+    nChunk.map(this);
+    if (PChunk(nChunk) == 0) {
+      STATUS(&quot;Arena::destroyChunk() nChunk is null\n&quot;);
+      return False;
+    }
+    if (nChunk != PChunk(pChunk)-&gt;forward) {
+#ifdef DESTROYLOG
+      cerr &lt;&lt; &quot;faa &quot; &lt;&lt; &quot;pChunk&quot; &lt;&lt; pChunk
+           &lt;&lt; &quot; aChunk &quot; &lt;&lt; aChunk &lt;&lt; endl;
+#endif
+      // nChunk is in use
+      // consolidate with pChunk
+      SizeType newSize = 
+        PChunk(pChunk)-&gt;getSize() + PChunk(aChunk)-&gt;getSize();
+      // remove aChunk
+      if (!removeObject(aChunk)) {
+        STATUS(&quot;Arena::destroyChunk() removeObject(aChunk) failed\n&quot;);
+        return False;
+      }
+      PChunk(pChunk)-&gt;setSize(newSize);
+      PChunk(nChunk)-&gt;setPrevSize(newSize);
+      PChunk(nChunk)-&gt;clearPrevInUse();
+
+
+      // update fragmentation flag of pChunk
+      setObjectFlag(pChunk, False, newSize);
+      if (maximumFreeChunk &lt; newSize)
+        maximumFreeChunk = newSize;
+    } else {
+#ifdef DESTROYLOG
+      cerr &lt;&lt; &quot;faf &quot; &lt;&lt; &quot;pChunk &quot; &lt;&lt; pChunk
+           &lt;&lt; &quot; aChunk &quot; &lt;&lt; aChunk 
+           &lt;&lt; &quot; nChunk &quot; &lt;&lt; nChunk &lt;&lt; endl;
+#endif
+      // nChunk in not in use
+      // consolidate with pChunk and nChunk
+      OffsetChunkPair nnChunk(nChunk.getNextChunk(this));
+      nnChunk.map(this);
+      if (PChunk(nnChunk) == 0) {
+        STATUS(&quot;Arena::destroyChunk() nnChunk is null\n&quot;);
+        return False;
+      }
+      OffsetChunkPair nfChunk(PChunk(nChunk)-&gt;forward);
+      nfChunk.map(this);
+      if (PChunk(nfChunk) == 0) {
+        STATUS(&quot;Arena::destroyChunk() nfChunk is null\n&quot;);
+        return False;
+      }
+      SizeType newSize = 
+        PChunk(pChunk)-&gt;getSize() + 
+        PChunk(aChunk)-&gt;getSize() + 
+        PChunk(nChunk)-&gt;getSize();
+      if (!removeObject(aChunk)) {
+        STATUS(&quot;Arena::destroyChunk() removeObject(aChunk) failed\n&quot;);
+        return False;
+      }
+      if (!removeObject(nChunk)) {
+        STATUS(&quot;Arena::destroyChunk() removeObject(nChunk) failed\n&quot;);
+        return False;
+      }
+      PChunk(pChunk)-&gt;setSize(newSize);
+      PChunk(nnChunk)-&gt;setPrevSize(newSize);
+      PChunk(nnChunk)-&gt;clearPrevInUse();
+      PChunk(pChunk)-&gt;forward = nfChunk;
+      PChunk(nfChunk)-&gt;backward = pChunk;
+      if (freeList == nChunk) {
+        freeList = pChunk;
+      }
+      // update fragmentation flag of pChunk
+      setObjectFlag(pChunk, False, newSize);
+      if (maximumFreeChunk &lt; newSize)
+        maximumFreeChunk = newSize;
+    }
+  }
+  updateInitialBlock();
+  return True;
+} // Arena::destroyChunk()
+
+
+BoolType Arena::insertObject(OffsetType offset, BoolType inUse) {
+  SizeType tableSize =
+    windowTable.getSize();
+  SizeType index = 
+    windowTable.searchByKey(offset | PersistentOffset::fragmentedMask);
+
+  Window *window1 = 0;
+  Window *window2 = 0;
+  if (0 &lt;= index &amp;&amp; index &lt; tableSize) {
+    window1 = windowTable(index);
+    ComparisonType cmp = 
+      window1-&gt;compare(offset | PersistentOffset::fragmentedMask);
+    if (cmp &gt; 0) {
+      index--;
+      window1 = windowTable(index);
+    } else if (cmp &lt; 0) {
+      index++;
+      window1 = windowTable(index);
+    }
+  }
+  if (0 &lt;= index - 1 &amp;&amp; index - 1 &lt; tableSize) {
+    window2 = windowTable(index - 1);
+    if (!window2-&gt;isWithinRange(offset))
+      window2 = 0;
+  }
+  if (window2 == 0 &amp;&amp;
+      0 &lt;= index + 1 &amp;&amp; index + 1 &lt; tableSize) {
+    window2 = windowTable(index + 1);
+    if (!window2-&gt;isWithinRange(offset))
+      window2 = 0;
+  }
+  if (window1 != 0 &amp;&amp; window2 != 0) {
+    if (window1-&gt;objectTable.getSize() == 0) {
+      Window *tmp = window2;
+      window2 = window1;
+      window1 = tmp;
+    } else if (window2-&gt;objectTable.getSize() &gt; 0) {
+      if (window1-&gt;compare(*window2) &gt; 0) {
+        if (window1-&gt;objectTable(0).isFragmented()) {
+          Window *tmp = window2;
+          window2 = window1;
+          window1 = tmp;
+        }
+      } else {
+        if (!window2-&gt;objectTable(0).isFragmented()) {
+          Window *tmp = window2;
+          window2 = window1;
+          window1 = tmp;
+        }
+      }
+    }
+  }
+#ifdef DEBUG
+  if (window1 == window2)
+    breakpoint();
+#endif
+  OffsetChunkPair obj(offset);
+  obj.map(window1);
+  if (window1-&gt;objectTable.getSize() &gt; 0) {
+    BoolType fragmented = 
+      !window1-&gt;isWithinRange((OffsetType)obj + PChunk(obj)-&gt;getSize() - 1);
+    PersistentOffset po(offset, inUse, fragmented);
+    window1-&gt;objectTable += po;
+    window1-&gt;setDirty();
+    if (window2 == 0) {
+      return True;
+    } else {
+      if (window2-&gt;objectTable.getSize() &gt; 0) {
+        fragmented = 
+          !(fragmented &amp;&amp; 
+            window2-&gt;isWithinRange((OffsetType)obj + 
+                                   PChunk(obj)-&gt;getSize() - 1));
+        PersistentOffset po2(offset, inUse, fragmented);
+        window2-&gt;objectTable += po2;
+        window2-&gt;setDirty();
+        if (window2-&gt;objectTable[obj].isNull())
+          return False;
+        else 
+          return True;
+      } else {
+        window2-&gt;initializeObjectTable(obj, 0, 0, this);
+        window2-&gt;setDirty();
+#ifdef DEBUG
+        window2-&gt;printStatus();
+#endif
+        if (window2-&gt;objectTable[obj].isNull())
+          return False;
+        else 
+          return True;
+      }
+    }
+  } else {
+    if (window2 == 0) {
+      window1-&gt;initializeObjectTable(obj, 0, 0, this);
+#ifdef DEBUG
+      window1-&gt;printStatus();
+#endif
+      if (window1-&gt;objectTable[obj].isNull())
+        return False;
+      else 
+        return True;
+    } else { // should not come here
+      return False;
+    }
+  }
+}
+
+BoolType Arena::removeObject(OffsetType offset) {
+  SizeType tableSize =
+    windowTable.getSize();
+  SizeType index = 
+    windowTable.searchByKey(offset | PersistentOffset::fragmentedMask);
+  SizeType min = index;
+  SizeType max = index;
+  
+  while (min &gt;= 0) {
+    if (!windowTable(min)-&gt;isWithinRange(offset))
+      break;
+    min--;
+  }
+  min++;
+  while (max &lt; tableSize) {
+    if (!windowTable(max)-&gt;isWithinRange(offset)) 
+      break;
+    max++;
+  }
+  max--;
+
+  BoolType success = True;
+  for (index = min; index &lt;= max; index++) {
+    Window *window = windowTable(index);
+    window-&gt;setDirty();
+    if ((window-&gt;objectTable -= offset).isNull())
+      success = False;
+  }
+
+
+#ifdef DEBUG
+  if (!success) {
+    cerr &lt;&lt; &quot;Arena::removeObject &quot; &lt;&lt; offset 
+         &lt;&lt; &quot;failed&quot; &lt;&lt; endl;
+    for (index = min; index &lt;= max; index++) {
+      cerr &lt;&lt; &quot;index &quot; &lt;&lt; index &lt;&lt; &quot; &quot;;
+      windowTable(index)-&gt;printStatus();
+    }
+    objectTableCheck();
+  }
+#endif
+
+  return True; // success1 &amp;&amp; success2;
+}
+
+BoolType Arena::setObjectFlag(OffsetType offset, 
+                              BoolType inUse,
+                              SizeType size) {
+  SizeType tableSize =
+    windowTable.getSize();
+  SizeType index = 
+    windowTable.searchByKey(offset | PersistentOffset::fragmentedMask);
+
+  SizeType min = index;
+  SizeType max = index;
+
+  while (min &gt;= 0) {
+    if (!windowTable(min)-&gt;isWithinRange(offset))
+      break;
+    min--;
+  }
+  min++;
+  while (max &lt; tableSize) {
+    if (!windowTable(max)-&gt;isWithinRange(offset)) 
+      break;
+    max++;
+  }
+  max--;
+
+  BoolType success = True;
+  BoolType cleared = False;
+  SizeType candidate = -1;
+  for (index = min; index &lt;= max; index++) {
+    Window *window = windowTable(index);
+    window-&gt;setDirty();
+    PersistentOffset &amp;po = window-&gt;objectTable[offset];
+    if (po.isNull()) {
+      success = False;
+      continue;
+    }
+    if (inUse) 
+      po.setInUse();
+    else
+      po.clearInUse();
+    if (size &gt; 0) {
+      BoolType complete = window-&gt;isWithinRange(offset + size - 1);
+      if (!complete) {
+        po.setFragmented();
+      } else {
+        if (po.isFragmented()) {
+          ComparisonType cmp = window-&gt;compare(offset);
+          if (!cleared)
+            if (cmp &gt;= 0) {
+              po.clearFragmented();
+              cleared = True;
+            } else {
+              candidate = index;
+            } 
+        } else {
+          if (cleared)
+            po.setFragmented();
+          else 
+            cleared = True;
+        }
+      }
+    } else {
+      cleared = True;
+    }
+  }
+  if (!cleared &amp;&amp; candidate &gt;= 0) {
+    windowTable(candidate)-&gt;objectTable[offset].clearFragmented();
+    cleared = True;
+  }
+
+#ifdef DEBUG
+  if (!cleared || max &gt; min)
+    if (!(max == min &amp;&amp; 
+          !windowTable(min)-&gt;isWithinRange(offset + size - 1)))
+      breakpoint();
+  if (!success) {
+    cerr &lt;&lt; &quot;Arena::setObjectFlag &quot; &lt;&lt; offset 
+         &lt;&lt; &quot;failed&quot; &lt;&lt; endl;
+    for (index = min; index &lt;= max; index++) {
+      cerr &lt;&lt; &quot;index &quot; &lt;&lt; index &lt;&lt; &quot; &quot;;
+      windowTable(index)-&gt;printStatus();
+    }
+    objectTableCheck();
+  }
+#endif
+  return success;
+}
+
+BoolType Arena::isValidFreeChunk(OffsetType offset) {
+  OffsetChunkPair o(offset);
+  if (o.map(this) == 0)
+    return False;
+  OffsetChunkPair f(PChunk(o)-&gt;forward);
+  if (f == 0)
+    return False;
+  if (f.map(this) == 0)
+    return False;
+  if (PChunk(f)-&gt;backward == o)
+    return True;
+  else
+    return False;
+}
+
+OffsetType Arena::findNearestFreeChunk(OffsetType hint) {
+  if (freeList == 0)
+    return 0;
+  if (hint == 0)
+    return freeList;
+  SizeType wtableSize = windowTable.getSize();
+  SizeType windex = windowTable.searchByKey(hint);
+  OffsetType fChunk = 0;
+  Window *window;
+  if (wtableSize &gt; 0) {
+    window = windowTable(windex);
+    SizeType tableSize;
+    SizeType index;
+    if (window-&gt;isWithinRange(hint)) {
+      tableSize = window-&gt;objectTable.getSize();
+      index = window-&gt;objectTable.searchByKey(hint);
+      while (0 &lt;= index &amp;&amp; index &lt; tableSize) {
+        if (!window-&gt;objectTable(index).isInUse()) {
+          fChunk = window-&gt;objectTable(index).getOffset();
+          if (fChunk != topChunk)
+            return fChunk;
+        }
+        index--;
+      }
+      index = window-&gt;objectTable.searchByKey(hint);
+      while (0 &lt;= index &amp;&amp; index &lt; tableSize) {
+        if (!window-&gt;objectTable(index).isInUse()) {
+          fChunk = window-&gt;objectTable(index).getOffset();
+          if (fChunk != topChunk)
+            return fChunk;
+        }
+        index++;
+      }
+    }
+    // search backwards
+    SizeType windex2 = windex; // backup
+    while (0 &lt;= windex &amp;&amp; windex &lt; wtableSize) {
+      window = windowTable(windex);
+      tableSize = window-&gt;objectTable.getSize();
+      if (tableSize &gt; 0) {
+        index = tableSize - 1;
+        while (0 &lt;= index &amp;&amp; index &lt; tableSize) {
+          if (!window-&gt;objectTable(index).isInUse()) {
+            fChunk = window-&gt;objectTable(index).getOffset();
+            if (fChunk != topChunk) 
+              return fChunk;
+          }
+          index--;
+        }
+      }
+      windex--;
+    }
+    // search forwards
+    windex = windex2 + 1;
+    while (0 &lt;= windex &amp;&amp; windex &lt; wtableSize) {
+      window = windowTable(windex);
+      tableSize = window-&gt;objectTable.getSize();
+      if (tableSize &gt; 0) {
+        index = 0;
+        while (0 &lt;= index &amp;&amp; index &lt; tableSize) {
+          if (!window-&gt;objectTable(index).isInUse()) {
+            fChunk = window-&gt;objectTable(index).getOffset();
+            if (fChunk != topChunk) 
+              return fChunk;
+          }
+          index++;
+        }
+      }
+      windex++;
+    }
+    // there is no mapped freeChunk
+    return freeList;
+  } else {
+    return freeList;
+  }
+}
+
+PersistentOffset &amp;Arena::getObject(OffsetType offset, 
+                            BoolType fragmented = False) {
+  Window *window = 
+    windowTable[offset | 
+               (fragmented ? PersistentOffset::fragmentedMask : 0)];
+  if (window == 0)
+    return PersistentOffset::nullObject;
+  if (fragmented) {
+    PersistentOffset &amp;po = window-&gt;objectTable[offset];
+    if (po.isFragmented()) {
+      window-&gt;setDirty();
+      return po;
+    }
+    SizeType index = windowTable.searchByKey(offset);
+    if (index - 1 &gt;= 0) {
+      window = windowTable(index - 1);
+      if (window-&gt;isWithinRange(offset)) {
+        PersistentOffset &amp;po2 = window-&gt;objectTable[offset];
+        if (po2.isFragmented()) {
+          window-&gt;setDirty();
+          return po2;
+        } else { 
+          return PersistentOffset::nullObject;
+        }
+      }
+    }
+    if (index + 1 &lt; windowTable.getSize()) {
+      window = windowTable(index + 1);
+      if (window-&gt;isWithinRange(offset)) {
+        PersistentOffset &amp;po3 = window-&gt;objectTable[offset];
+        if (po3.isFragmented()) {
+          window-&gt;setDirty();
+          return po3;
+        } else {
+          return PersistentOffset::nullObject;
+        }
+      }
+    }
+    return PersistentOffset::nullObject;
+  } else {
+    PersistentOffset &amp;po4 = window-&gt;objectTable[offset];
+    if (!po4.isFragmented()) {
+      window-&gt;setDirty();
+      return po4;
+    } else {
+      return PersistentOffset::nullObject;
+    }
+  }
+}
+
+Window *Arena::getWindow(OffsetType offset, 
+                  BoolType fragmented = False) {
+  Window *window = 
+    windowTable[offset | 
+               (fragmented ? PersistentOffset::fragmentedMask : 0)];
+  if (window == 0)
+    return 0;
+  if (fragmented) {
+    PersistentOffset &amp;po = window-&gt;objectTable[offset];
+    if (po.isFragmented())
+      return window;
+    SizeType index = windowTable.searchByKey(offset);
+    if (index - 1 &gt;= 0) {
+      window = windowTable(index - 1);
+      if (window-&gt;isWithinRange(offset)) {
+        PersistentOffset &amp;po2 = window-&gt;objectTable[offset];
+        if (po2.isFragmented())
+          return window;
+      }
+    }
+    if (index + 1 &lt; windowTable.getSize()) {
+      window = windowTable(index + 1);
+      if (window-&gt;isWithinRange(offset)) {
+        PersistentOffset &amp;po3 = window-&gt;objectTable[offset];
+        if (po3.isFragmented())
+          return window;
+      }
+    }
+    return 0;
+  } else {
+    PersistentOffset &amp;po4 = window-&gt;objectTable[offset];
+    if (!po4.isFragmented())
+      return window;
+    else 
+      return 0;
+  }
+}
+
+BoolType Arena::updateFragmentedFlags(SizeType windowIndex) {
+  Window *window = windowTable(windowIndex);
+  if (window == 0)
+    return True;
+  SizeType tableSize = window-&gt;objectTable.getSize();
+  if (tableSize == 0)
+    return True;
+  SizeType index = 0;
+  Window *before = windowTable(windowIndex - 1);
+  Window *after = windowTable(windowIndex + 1);
+  if (before != 0 &amp;&amp; window-&gt;isSeparatedFrom(*before))
+    before = 0;
+  if (after != 0 &amp;&amp; window-&gt;isSeparatedFrom(*after))
+    after = 0;
+  OffsetType nextOffset;
+  for (index = 0; index &lt; tableSize; index++) {
+    PersistentOffset &amp;po = window-&gt;objectTable(index);
+    if (index &lt; tableSize - 1) {
+      nextOffset = 
+        window-&gt;objectTable(index + 1).getOffset();
+    } else {
+      nextOffset = 
+        po.getOffset() + window-&gt;map(po.getOffset())-&gt;getSize();
+    }
+    BoolType complete = window-&gt;isWithinRange(nextOffset - 1);
+    BoolType fragFlag = po.isFragmented();
+    Window *overlap = 0;
+    if (before != 0 &amp;&amp;
+        before-&gt;isWithinRange(po.getOffset())) {
+      overlap = before;
+    } else if (after != 0 &amp;&amp;
+               after-&gt;isWithinRange(po.getOffset())) {
+      overlap = after;
+    }
+    
+    if (overlap != 0) {
+      if (complete) {
+        BoolType fragFlagAnother = 
+          overlap-&gt;objectTable[po.getOffset()].isFragmented();
+        if (fragFlagAnother) {
+          if (fragFlag)
+            po.clearFragmented();
+        } else {
+          if (!fragFlag)
+            po.setFragmented();
+        }
+      } else {
+        if (!fragFlag)
+          po.setFragmented();
+      }
+    } else {
+      if (complete) {
+        if (fragFlag)
+          po.clearFragmented();
+      } else {
+        if (!fragFlag)
+          po.setFragmented();
+      }
+    }
+  }
+  return True;
+}
+
+BoolType Arena::removeRedundantWindow(OffsetType offset) {
+  SizeType tableSize = windowTable.getSize();
+  SizeType windowIndex = windowTable.searchByKey(offset);
+  if (windowIndex &lt; tableSize &amp;&amp; isRedundant(windowIndex)) {
+#ifdef DEBUG
+    cerr &lt;&lt; &quot;Arena::removeRedundantWindow(&quot; &lt;&lt; offset &lt;&lt; &quot;)\n&quot;;
+#endif
+    Window *window = windowTable(windowIndex);
+    if (False || window-&gt;isDirty()) {
+      window-&gt;sync();
+      window-&gt;clearDirty();
+    }
+    if ((windowTable -= window) == 0) {
+      return False;
+    }
+    delete window;
+    tableSize = windowTable.getSize();
+    windowIndex = windowTable.searchByKey(offset);
+    updateFragmentedFlags(windowIndex);
+    updateFragmentedFlags(windowIndex - 1);
+    updateFragmentedFlags(windowIndex + 1);
+  } 
+  return True;
+}
+
+BoolType Arena::isRedundant(SizeType windowIndex) {
+  Window *window = windowTable(windowIndex);
+  BoolType allRedundant = True;
+  SizeType index = 0;
+  OffsetType off;
+  OffsetType nextOffset;
+  OffsetType tableSize = window-&gt;objectTable.getSize();
+
+  if (window == 0)
+    return False; // no such window
+  if (!window-&gt;isCompletelyReleased())
+    return False; // some objects are grabbed
+  while (allRedundant &amp;&amp; index &lt; tableSize) { 
+    PersistentOffset &amp;po = window-&gt;objectTable(index);
+    off = po.getOffset();
+    if (!po.isFragmented()) {
+      if (index + 1 &lt; tableSize) {
+        nextOffset = 
+          window-&gt;objectTable(index + 1).getOffset();
+      } else {
+        nextOffset =
+          off + window-&gt;map(off)-&gt;getSize();
+      }
+      if (!(windowTable(windowIndex - 1) != 0 &amp;&amp; 
+            windowTable(windowIndex - 1)-&gt;isWithinRange(off) &amp;&amp;
+            windowTable(windowIndex - 1)-&gt;isWithinRange(nextOffset - 1)))
+        if (!(windowTable(windowIndex + 1) != 0 &amp;&amp; 
+              windowTable(windowIndex + 1)-&gt;isWithinRange(off) &amp;&amp; 
+              windowTable(windowIndex + 1)-&gt;isWithinRange(nextOffset - 1)))
+          allRedundant = False; // found a complete but replaceable chunk
+    } else {
+      if (!(windowTable(windowIndex - 1) != 0 &amp;&amp; 
+            windowTable(windowIndex - 1)-&gt;isWithinRange(off))) 
+        if (!(windowTable(windowIndex + 1) != 0 &amp;&amp; 
+              windowTable(windowIndex + 1)-&gt;isWithinRange(off))) 
+          allRedundant = False; // found a non-overlapped chunk
+    }
+    index++;
+  }
+  return allRedundant;
+}
+
+BoolType Arena::updateInitialBlock(BoolType sync = False) {
+  ArenaInitialBlock *aib = (ArenaInitialBlock *)masterWindow.getAddr();
+  if (aib ==0)
+    return False;
+  aib-&gt;arenaSize = arenaSize;
+  aib-&gt;topChunk = topChunk;
+  aib-&gt;freeList = freeList;
+  if (sync) 
+    masterWindow.sync();
+  return True;
+}
+
+
+
+/*
+  grow -- expand the size of the Arena storage
+
+  parameter: none
+  
+  return value:
+  BoolType -- True if successful
+ */
+BoolType Arena::grow() {
+  if (arenaID &gt; 0) { // persistent arena
+    RawFile storage(masterWindow.getFd(), masterWindow.getFileName());
+    if (arenaSize + PersistentStorage::growingChunkSize &gt; 
+        PersistentStorage::maxArenaSize) 
+      return False;
+    if (storage.getSize() != arenaSize)
+      return False;
+    OffsetType tail = storage.seek(arenaSize, SEEK_SET);
+    if (tail != arenaSize)
+      return False;
+    Chunk *tc = 0;
+    if (topChunk != 0) {
+      tc = map(topChunk);
+      if (tc == 0) 
+        return False;
+      if (topChunk + tc-&gt;getSize() != arenaSize)
+        return False;
+    } else {
+      if (arenaSize != PersistentStorage::pageSize)
+        return False;
+    }
+    char buf[PersistentStorage::pageSize];
+    memset(buf, 0, PersistentStorage::pageSize);
+    OffsetType grownArenaSize = 
+      arenaSize + PersistentStorage::growingChunkSize;
+    for (SizeType bytes = 0; tail &lt; grownArenaSize; tail += bytes) {
+      bytes = storage.write(buf, PersistentStorage::pageSize);
+      if (bytes != PersistentStorage::pageSize) {
+        if (bytes &gt; 0) 
+          tail += bytes;
+        break;
+      }
+    }
+    tail &amp;= ~(sizeof(Chunk) - 1);
+    if (arenaSize == tail)
+      return False;
+    if (storage.seek(tail, SEEK_SET) != tail)
+      return False;
+    if (topChunk != 0) {
+      tc-&gt;setSize(tc-&gt;getSize() + (tail - arenaSize));
+      arenaSize = tail;
+    } else {
+      Window *window = new Window(masterWindow, 
+                                  PersistentStorage::pageSize,
+                                  PersistentStorage::pageSize);
+      tc = new(window-&gt;getAddr()) Chunk(0, tail - arenaSize, True);
+      window-&gt;sync();
+      arenaSize = tail;
+      delete window;
+      topChunk = PersistentStorage::pageSize;
+    }
+    ArenaInitialBlock *aib = (ArenaInitialBlock *)masterWindow.getAddr();
+    if (aib == 0) 
+      return False;
+    aib-&gt;arenaSize = arenaSize;
+    aib-&gt;topChunk = topChunk;
+    aib-&gt;freeList = freeList;
+    return True;
+  } else if (arenaID == 0) { // non-persistent arena
+    OffsetType tail = arenaSize;
+    // size checking is missing
+    Chunk *tc = 0;
+    OffsetType lastFreeChunk = 0;
+    Chunk *fChunk = 0;
+    if (topChunk != 0) {
+      tc = map(topChunk);
+      if (tc == 0)
+        return False;
+      if (freeList != 0) {
+        OffsetType f = freeList;
+        fChunk = map(f);
+        for (; fChunk-&gt;forward &gt; f; f = fChunk-&gt;forward, fChunk = map(f))
+          ;
+        lastFreeChunk = f;
+      }
+    } 
+    Window *window = 
+      new Window(masterWindow,
+                 tail,
+                 PersistentStorage::standardWindowSizeNonPersistent,
+                 0, 0, 0, this);
+    Chunk *dummy = new(window-&gt;getAddr()) 
+      Chunk((tc != 0 ? tc-&gt;getSize() : 0), 
+            sizeof(Chunk),
+            (tc != 0 ? False : True),
+            0, 0, True);
+    Chunk *newTopChunk = new(window-&gt;getAddr() + dummy-&gt;getSize())
+      Chunk(dummy-&gt;getSize(),
+            PersistentStorage::standardWindowSizeNonPersistent - 
+            dummy-&gt;getSize(), 
+            True);
+    if (topChunk != 0) {
+      if (lastFreeChunk != 0) {
+        tc-&gt;backward = lastFreeChunk;
+        tc-&gt;forward = fChunk-&gt;forward;
+        fChunk-&gt;forward = topChunk;
+      } else {
+        tc-&gt;backward = topChunk;
+        tc-&gt;forward = topChunk;
+        freeList = topChunk;
+      }
+    }
+    arenaSize = tail + PersistentStorage::standardWindowSizeNonPersistent;
+    windowTable += window;
+    topChunk = tail + dummy-&gt;getSize();
+    window-&gt;initializeObjectTable(tail, 0, 0, this);
+#ifdef DEBUG
+    window-&gt;printStatus();
+#endif
+    Chunk *newTopChunk2 = map(topChunk | PersistentOffset::fragmentedMask);
+    if (newTopChunk2 != newTopChunk)
+      return False;
+    return True;
+  } else { // arenaID &lt; 0
+    return False;
+  }
+}
+
+
+
+
+// member functions of Window
+
+// constructor
+Window::Window(Window &amp;w, 
+               OffsetType off, 
+               SizeType len, 
+               OffsetType obj,
+               Window *before,
+               Window *after,
+               Arena *arena,
+               SizeType minimumChunkSize):
+  MMap(w), // inherit the file descriptor of masterWindow
+  dirty(False),
+  totalGrabCount(0), // initialize the counters
+  totalGrabCountReadOnly(0),
+  objectTable((len / minimumChunkSize) + 1) {
+    // map 
+    if (MMap::map(off, len) == 0) { 
+      totalGrabCount = -1;
+      return;
+    }
+#ifdef DEBUG
+    cerr &lt;&lt; &quot;Window::Window(offset &quot; &lt;&lt; off 
+         &lt;&lt; &quot;, length &quot; &lt;&lt; len
+         &lt;&lt; &quot;, object &quot; &lt;&lt; obj &lt;&lt; &quot;)&quot; &lt;&lt; endl;
+#endif
+    // construct objectTable with the hint
+    if (obj != 0 &amp;&amp;
+        !initializeObjectTable(obj, before, after, arena)) {
+      totalGrabCount = -1;
+      return;
+    }
+    
+    PersistentStorage *s = PersistentStorage::getThePS();
+    if (s != 0) {
+      s-&gt;notifyMapping(len, this);
+    }
+#ifdef DEBUG
+    // printStatus();
+#endif
+}
+
+// destructor
+Window::~Window() {
+  objectTable.removeAll();
+  PersistentStorage *s = PersistentStorage::getThePS();
+  if (s != 0) {
+    s-&gt;notifyUnmapping(getLength(), this);
+  }
+}
+
+
+void Window::printStatus() {
+  SizeType size;
+  ostream &amp;os = cerr;
+  os &lt;&lt; &quot;Window {\n  begin &quot; &lt;&lt; getOffset()
+     &lt;&lt; &quot;\n  length &quot; &lt;&lt; getLength()
+     &lt;&lt; &quot;\n  end &quot; &lt;&lt; getOffset() + getLength()
+     &lt;&lt; &quot;\n  objectTable {\n  size &quot; &lt;&lt; (size = objectTable.getSize())
+       &lt;&lt; &quot;\n&quot;;
+  SizeType index;
+  OffsetType o;
+  BoolType consistent = True;
+  SizeType psize = 0;
+  for (index = 0; index &lt; size; index++) {
+    o = objectTable(index).getOffset();
+    Chunk *chunk = map(o);
+    if (chunk == 0) {
+      os &lt;&lt; &quot;  offset &quot; &lt;&lt; o &lt;&lt; &quot; chunk null &quot;
+         &lt;&lt; (objectTable(index).isInUse() ? &quot;Used &quot; : &quot;Free &quot;) 
+         &lt;&lt; (objectTable(index).isFragmented() ? 
+             &quot;Frag &quot; : &quot;Comp &quot;) 
+         &lt;&lt; (objectTable(index).isGrabbed() ? 
+             &quot;Grab&quot; : &quot;Rel &quot;) 
+         &lt;&lt; &quot; Count &quot; 
+         &lt;&lt; objectTable(index).getGrabCountReadOnly()
+         &lt;&lt; &quot;\n&quot;;
+    } else {
+      os &lt;&lt; &quot;  offset &quot; &lt;&lt; o 
+         &lt;&lt; &quot; size &quot; &lt;&lt; chunk-&gt;getSize()
+         &lt;&lt; &quot; pSize &quot; &lt;&lt; chunk-&gt;getPrevSize()
+         &lt;&lt; &quot; pIU &quot; &lt;&lt; (chunk-&gt;isPrevInUse() ? &quot;True  &quot; : &quot;False &quot;)
+         &lt;&lt; (objectTable(index).isInUse() ? &quot;Used &quot; : &quot;Free &quot;) 
+         &lt;&lt; (objectTable(index).isFragmented() ? 
+             &quot;Frag &quot; : &quot;Comp &quot;) 
+         &lt;&lt; (objectTable(index).isGrabbed() ? 
+             &quot;Grab&quot; : &quot;Rel &quot;) 
+         &lt;&lt; &quot; Count &quot; 
+         &lt;&lt; objectTable(index).getGrabCountReadOnly()
+         &lt;&lt; &quot;\n&quot;;
+    }
+    if (chunk != 0 &amp;&amp; psize != 0 &amp;&amp; psize != chunk-&gt;getPrevSize()) 
+      consistent = False;
+    psize = chunk-&gt;getSize();
+    if (psize == 0)
+      consistent = False;
+  }
+  os &lt;&lt; &quot;} // Window\n&quot;;
+#ifdef DEBUG
+  if (!consistent)
+    breakpoint();
+#endif
+}
+
+
+BoolType Window::initializeObjectTable(OffsetType obj, 
+                                       Window *before, 
+                                       Window *after,
+                                       Arena *arena) {
+#ifdef DEBUG
+  cerr &lt;&lt; &quot;Window::initializeObjectTable(object &quot; &lt;&lt; obj &lt;&lt; &quot;)&quot; &lt;&lt; endl;
+#endif
+  // get the neighbors with the hint arena
+  if (arena != 0 &amp;&amp; before == 0 &amp;&amp; after == 0) {
+    SizeType tableSize = arena-&gt;windowTable.getSize();
+    if (tableSize &gt; 0) {
+      SizeType index = arena-&gt;windowTable.searchByElement(this);
+      Window *self = arena-&gt;windowTable(index);
+      if (self == this) { // 'this' is in windowTable 
+        // 0 is assgined when the index is illegal
+        before = arena-&gt;windowTable(index - 1);
+        after = arena-&gt;windowTable(index + 1);
+      } else {
+        // 0 is assgined when the index is illegal
+        before = arena-&gt;windowTable(index);
+        after = arena-&gt;windowTable(index + 1);
+      }    
+    }  
+  }
+  // boundaries
+  OffsetType begin = getOffset();
+  OffsetType end = begin + getLength();
+  if (!(begin &lt;= obj &amp;&amp; obj &lt; end)) { // obj must be within the range
+    cerr &lt;&lt; &quot;Window::initializeObjectTable() invalid hint obj\n&quot;
+         &lt;&lt; &quot;begin: &quot; &lt;&lt; begin &lt;&lt; &quot; end: &quot; &lt;&lt; end &lt;&lt; &quot; hint: &quot; &lt;&lt; obj
+         &lt;&lt; endl;
+    return False;
+  }
+  
+  // current objectTable status
+  SizeType objects = objectTable.getSize();
+  if (True || objects == 0) { // complete initialization required
+    if (objects &gt; 0) 
+      objectTable.removeAll();
+    OffsetChunkPair hint(obj);
+    hint.map(this);
+    { // check if the hint is valid
+      OffsetChunkPair neighbor;
+      if (isWithinRange(neighbor = 
+                        (OffsetType)hint - 
+                        PChunk(hint)-&gt;getPrevSize())) {
+        // previous chunk is within the range
+        neighbor.map(this);
+        if (PChunk(hint)-&gt;getPrevSize() != 0 &amp;&amp;
+            PChunk(neighbor)-&gt;getSize() != PChunk(hint)-&gt;getPrevSize()) {
+#ifdef DEBUG
+          cerr &lt;&lt; &quot;Window::initializeObjectTable() invalid hint obj\n&quot;
+               &lt;&lt; &quot;begin: &quot; &lt;&lt; begin &lt;&lt; &quot; end: &quot; &lt;&lt; end &lt;&lt; &quot; hint: &quot; &lt;&lt; obj
+               &lt;&lt; endl;
+#endif
+          return False;
+        }
+      } else if (isWithinRange(neighbor = 
+                               (OffsetType)hint + 
+                               PChunk(hint)-&gt;getSize())) {
+        // next chunk is within the range
+        neighbor.map(this);
+        if (PChunk(neighbor)-&gt;getPrevSize() != PChunk(hint)-&gt;getSize()) {
+#ifdef DEBUG
+          cerr &lt;&lt; &quot;Window::initializeObjectTable() invalid hint obj\n&quot;
+               &lt;&lt; &quot;begin: &quot; &lt;&lt; begin &lt;&lt; &quot; end: &quot; &lt;&lt; end &lt;&lt; &quot; hint: &quot; &lt;&lt; obj
+               &lt;&lt; endl;
+#endif
+          return False;
+        }
+      } else {
+        // more strict checking is desirable
+      }
+    } // the hint obj is valid
+    // trace to the last object in the range
+    OffsetChunkPair o = hint;
+    OffsetChunkPair last = o;
+    while (isWithinRange(o)) {
+      last = o;
+      last.map(this);
+      o = (OffsetType)last + PChunk(last)-&gt;getSize();
+    }
+    // 'last' is mapped
+    // whether 'last' Chunk is in use or not is unknown
+    BoolType lastChunkUsageUnknown = True;
+    BoolType inUse = True;
+    OffsetChunkPair prev;
+    o = last;
+    while (isWithinRange(o)) {
+      PersistentOffset po(o, inUse);
+      objectTable += po; // add new object in objectTable
+      o.map(this);
+      if (lastChunkUsageUnknown &amp;&amp; !inUse) { // find a free Chunk
+        lastChunkUsageUnknown = False;
+        if (PChunk(o)-&gt;forward == last) { // next free Chunk is 'last'
+          objectTable[last].clearInUse();
+        } 
+      }
+      if (PChunk(o)-&gt;getPrevSize() == 0)
+        break;
+      prev = (OffsetType)o - PChunk(o)-&gt;getPrevSize();
+      inUse = PChunk(o)-&gt;isPrevInUse();
+      o = prev;
+    }
+    // detect the usage of the last Chunk
+    if (lastChunkUsageUnknown) {
+      // trying various hints
+      if (lastChunkUsageUnknown &amp;&amp; 
+          arena != 0 &amp;&amp; arena-&gt;topChunk == last) {
+        // 'last' Chunk is the topChunk
+        lastChunkUsageUnknown = False;
+        objectTable[last].clearInUse();
+      }  
+      if (lastChunkUsageUnknown &amp;&amp; arena != 0) {
+        if (arena-&gt;freeList == last) {
+          // 'last' Chunk is the freeList
+          lastChunkUsageUnknown = False;
+          objectTable[last].clearInUse();
+        } else if (arena-&gt;freeList == 0) {
+          lastChunkUsageUnknown = False;
+          objectTable[last].setInUse();
+        }         
+      }  
+      if (lastChunkUsageUnknown &amp;&amp; before != 0) {
+        SizeType tableSize = before-&gt;objectTable.getSize();
+        if (tableSize &gt; 0) {
+          SizeType index = tableSize - 1;
+          while (lastChunkUsageUnknown &amp;&amp; index &gt;= 0) {
+            PersistentOffset &amp;po = before-&gt;objectTable(index);
+            if (!po.isInUse()) {
+              OffsetChunkPair f(po.getOffset());
+              f.map(before);
+              if (PChunk(f)-&gt;forward == last) {
+                lastChunkUsageUnknown = False;
+                objectTable[last].clearInUse();
+              } else if (PChunk(f)-&gt;forward &gt; last) {
+                lastChunkUsageUnknown = False;
+                objectTable[last].setInUse();
+              }
+              break;
+            }
+            index--;
+          }
+        }
+      }
+      if (lastChunkUsageUnknown &amp;&amp; after != 0) {
+        SizeType tableSize = after-&gt;objectTable.getSize();
+        if (tableSize &gt; 0) {
+          PersistentOffset &amp;po = after-&gt;objectTable[last];
+          if (!po.isNull()) {
+            lastChunkUsageUnknown = False;
+            if (!po.isInUse()) {
+              objectTable[last].clearInUse();
+            } else {
+              objectTable[last].setInUse();
+            }         
+          } else {
+            SizeType index = 0;
+            while (lastChunkUsageUnknown &amp;&amp; index &lt; tableSize) {
+              if (!after-&gt;objectTable(index).isInUse()) {
+                OffsetChunkPair f(after-&gt;objectTable(index)
+                                  .getOffset());
+                f.map(after);
+                if (PChunk(f)-&gt;backward == last) {
+                  lastChunkUsageUnknown = False;
+                  objectTable[last].clearInUse();
+                } else if (PChunk(f)-&gt;backward &lt; last) {
+                  lastChunkUsageUnknown = False;
+                  objectTable[last].setInUse();
+                }
+                break;
+              }
+              index++;
+            }
+          }
+        }
+      }
+      // remaining hints require Window mapping
+      if (lastChunkUsageUnknown) {
+        OffsetChunkPair nextOfLast((OffsetType)last + 
+                                   PChunk(last)-&gt;getSize());
+        nextOfLast.map(arena);
+        if (PChunk(nextOfLast) == 0) {
+#ifdef DEBUG
+          STATUS(&quot;Window::initializeObjectTable next of last chunk is null&quot;);
+#endif
+          return False;
+        }
+        if (PChunk(nextOfLast)-&gt;isPrevInUse()) {
+          lastChunkUsageUnknown = False;
+          objectTable[last].setInUse();
+        } else {
+          lastChunkUsageUnknown = False;
+          objectTable[last].clearInUse();
+        }
+      }
+      // gave up 
+#ifdef DEBUG
+      if (lastChunkUsageUnknown) {
+        cerr &lt;&lt; &quot;Window::initializeObjectTable()\n&quot;
+          &quot;  giving up the detection of the last Chunk usage&quot; &lt;&lt; endl;
+      }
+#endif
+    }
+    // fragmentation check
+    if (before != 0 &amp;&amp; !isSeparatedFrom(*before)) {
+      // overlapped with 'before' Window
+      SizeType tableSize = objectTable.getSize();
+      SizeType beforeTableSize = before-&gt;objectTable.getSize();
+      OffsetType off;
+      if (tableSize &gt; 0 &amp;&amp; beforeTableSize &gt; 0) {
+        SizeType index = beforeTableSize - 1;
+        while (index &gt; 0 &amp;&amp; 
+               before-&gt;objectTable(index).isFragmented()) {
+          index--;
+        }
+        if (!before-&gt;objectTable(index).isFragmented()) {
+          off = before-&gt;objectTable(index).getOffset();
+          index = objectTable.searchByKey(off);
+          if (objectTable(index).getOffset() == off) {
+            while (index &gt;= 0) {
+              objectTable(index).setFragmented();
+              index--;
+            }
+          }
+        }
+      }
+    }
+    if (after != 0 &amp;&amp; !isSeparatedFrom(*after)) {
+      // overlapped with 'after' Window
+      SizeType tableSize = objectTable.getSize();
+      SizeType afterTableSize = after-&gt;objectTable.getSize();
+      if (tableSize &gt; 0 &amp;&amp; afterTableSize &gt; 0) {
+        SizeType index = 0;
+        OffsetType off;
+        while (index &lt; afterTableSize &amp;&amp; 
+               (off = 
+                after-&gt;objectTable(index).getOffset()) &lt; 
+               end) {
+          if (!after-&gt;objectTable(index).isFragmented()) {
+            objectTable[off].setFragmented();
+          }
+          index++;
+        }
+      }
+    }
+    if (!isWithinRange((OffsetType)last + PChunk(last)-&gt;getSize() - 1)) {
+      objectTable[last].setFragmented();
+    }
+    return True;
+  } else { // objects &gt; 0; additional initialization required
+    return False;
+  }
+}
+
+// member functions of OffsetChunkPair
+
+inline OffsetType OffsetChunkPair::getPrevChunk(Arena *arena, 
+                                                BoolType fragmented) {
+  if (arena == 0) 
+    return 0;
+  this-&gt;map(arena, fragmented);
+  return offset - PChunk(*this)-&gt;getPrevSize();
+}
+
+inline OffsetType OffsetChunkPair::getNextChunk(Arena *arena, 
+                                                BoolType fragmented) {
+  if (arena == 0) 
+    return 0;
+  this-&gt;map(arena, fragmented);
+  return offset + PChunk(*this)-&gt;getSize();
+}
+
+inline Chunk *OffsetChunkPair::map(Arena *arena, 
+                                   BoolType fragmented, 
+                                   BoolType anywhere) {
+  if (chunk == 0) {
+    chunk = arena-&gt;map(offset | 
+                       (fragmented ? PersistentOffset::fragmentedMask : 0) |
+                       (anywhere ? PersistentOffset::inUseMask : 0));
+#ifdef DEBUG
+    if (chunk != 0)
+      if (!anywhere &amp;&amp; chunk-&gt;getSize() == 0)
+        breakpoint();
+#endif
+  }
+  return chunk;
+}
+
+Chunk *OffsetChunkPair::map(Window *window) {
+  if (chunk == 0) {
+    chunk = window-&gt;map(offset);
+  }
+  return chunk;
+}
+
+// member functions of PersistentPointer
+
+// redirect primitive operations to the PersistentStorage object
+
+inline PointerType PersistentPointer::grab() {
+  return PersistentStorage::getThePS()-&gt;grab(*this);
+}
+
+inline BoolType PersistentPointer::release() {
+  return PersistentStorage::getThePS()-&gt;release(*this);
+}
+
+inline PointerType PersistentPointer::grabReadOnly() {
+  return PersistentStorage::getThePS()-&gt;grabReadOnly(*this);
+}
+
+inline BoolType PersistentPointer::releaseReadOnly() {
+  return PersistentStorage::getThePS()-&gt;releaseReadOnly(*this);
+}
+</PRE>
+
+<P>
+<BR><HR>
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

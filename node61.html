@@ -1,0 +1,146 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Object Mapping</TITLE>
+<META NAME="description" CONTENT="Object Mapping">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="previous" HREF="node60.html">
+<LINK REL="up" HREF="node59.html">
+<LINK REL="next" HREF="node62.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html1095"
+ HREF="node62.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1091"
+ HREF="node59.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1087"
+ HREF="node60.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1093"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1094"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1096"
+ HREF="node62.html">PersistentStorage Class</A>
+<B> Up:</B> <A NAME="tex2html1092"
+ HREF="node59.html">Comprehensive Description</A>
+<B> Previous:</B> <A NAME="tex2html1088"
+ HREF="node60.html">Condensed Map of Classes</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H3><A NAME="SECTION00631200000000000000">
+Object Mapping</A>
+</H3>
+<P>
+<BR>
+<DIV ALIGN="CENTER"><A NAME="objectmapping">&#160;</A><A NAME="1391">&#160;</A>
+<TABLE>
+<CAPTION><STRONG>Figure 3.8:</STRONG>
+<I>Object Mapping</I></CAPTION>
+<TR><TD><IMG WIDTH="741" HEIGHT="658"
+ SRC="img11.gif"
+ ALT="\begin{figure}
+\begin{center}
+
+\includegraphics [scale=.83]{mapping.ps}
+\end{center}\end{figure}"></TD></TR>
+</TABLE>
+</DIV>
+<BR>
+<P>
+The fundamental algorithm of mapping the persistent objects in the main
+memory is shown in the Figure <A HREF="node61.html#objectmapping">3.8</A>.  Most of the peripheral
+features are omitted from the diagram.
+<P>
+An instance of the <TT>PersistentPointer</TT> class has a pair of integers
+- <TT>arenaID</TT> and <TT>offset</TT>.  When the <TT>PersistentStorage</TT> object
+is requested for the mapping of the persistent object pointed by the
+pointer, these integers serve as the clues to the mapping and the address
+conversion.
+<P>
+The <TT>PersistentStorage</TT> object has the table of the <TT>Arena</TT> 
+objects.  The <TT>Arena</TT> object with the <TT>arenaID</TT> is selected for
+the mapping.  The <TT>Arena</TT> class controls one storage file for the
+persistent objects.  The selected <TT>Arena</TT> object then searches for
+the appropriate <TT>Window</TT> object for the mapping in the table of
+the mapped <TT>Window</TT>s.  If there are no appropriate <TT>Window</TT>s
+in the table, a new <TT>Window</TT> is created for the mapping.
+<P>
+The selected or created <TT>Window</TT> object then searches for the
+appropriate <TT>PersistentOffset</TT> object in the 
+<TT>objectTable</TT>, whose elements correspond to the persistent objects 
+in the <TT>Window</TT>.  The <TT>offset</TT> in the <TT>PersistentPointer</TT> 
+object is used for searching the object in the table.  If the <TT>offset</TT> 
+points to the valid <TT>Chunk</TT> object in the <TT>Window</TT>, there should 
+be an element with the <TT>offset</TT> in the table.  The selected 
+<TT>PersistentOffset</TT> object and the <TT>Chunk</TT> object together contain 
+the information on the persistent object at the <TT>offset</TT> such as 
+whether the object is grabbed or not, how many pointers are 
+read-only-grabbing the object, whether the <TT>Chunk</TT> is in use or not.
+<P>
+When all the requirements for the mapping are fulfilled, the reference
+pointer for the persistent object is calculated from the address of 
+the <TT>Chunk</TT> object in the main memory, and finally handed to the user.
+<P>
+A <TT>Chunk</TT> object is placed at the top of every memory block in
+the <TT>Arena</TT> storage file and appears in the main memory when the 
+<TT>Window</TT> object which contains the <TT>Chunk</TT> object is created.
+<P>
+Each <TT>Chunk</TT> is doubly linked with the immediate two <TT>Chunk</TT>s
+by containing the size of the memory block and the size of the previous
+memory block.  Such memory blocks are just called <B>chunks</B>.  Free chunks
+have additional information on the previous and the next free chunks
+in the <TT>Arena</TT>, that is, they are doubly linked with the immediate
+free chunks by the offsets to them.
+<P>
+It must be observed that not all <TT>Window</TT>s which contain the 
+<TT>Chunk</TT> object at the requested <TT>offset</TT> are suitable for
+the mapping.  The reason is that the whole chunk may not be contained
+in the <TT>Window</TT>.  Such chunk is <B>fragmented</B> and cannot be
+used for the reference of the persistent object.
+<P><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1095"
+ HREF="node62.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1091"
+ HREF="node59.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1087"
+ HREF="node60.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1093"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1094"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1096"
+ HREF="node62.html">PersistentStorage Class</A>
+<B> Up:</B> <A NAME="tex2html1092"
+ HREF="node59.html">Comprehensive Description</A>
+<B> Previous:</B> <A NAME="tex2html1088"
+ HREF="node60.html">Condensed Map of Classes</A>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

@@ -1,0 +1,127 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Mapping</TITLE>
+<META NAME="description" CONTENT="Mapping">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node69.html">
+<LINK REL="previous" HREF="node67.html">
+<LINK REL="up" HREF="node64.html">
+<LINK REL="next" HREF="node69.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html1184"
+ HREF="node69.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1180"
+ HREF="node64.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1174"
+ HREF="node67.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1182"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1183"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1185"
+ HREF="node69.html">Window Overlapping and Fragmentation</A>
+<B> Up:</B> <A NAME="tex2html1181"
+ HREF="node64.html">Arena Class</A>
+<B> Previous:</B> <A NAME="tex2html1175"
+ HREF="node67.html">Allocation</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H3><A NAME="SECTION00634400000000000000">
+Mapping</A>
+</H3>
+<P>
+There are several primitive operations for the mapping.  The Figure
+<A HREF="node61.html#objectmapping">3.8</A> shows the fundamentals of the mapping operations.
+<P><DL>
+<DT><STRONG>The <TT>map()</TT></STRONG>
+<DD>private operation is internally used for the mapping
+and address conversion.  The operation searches for the appropriate <TT>Window</TT>
+for the object at the specified offset.  If the search succeeds, it
+converts the offset to the pointer to the <TT>Chunk</TT>.  If the search 
+fails, it creates a new <TT>Window</TT> object for mapping and then converts
+the offset.  This operation is mainly implemented in the private operation
+<TT>mapWindow()</TT>.  The private operation <TT>map()</TT> invokes the 
+<TT>mapWindow()</TT> and the address conversion operation <TT>Window::map()</TT> 
+to convert the offset to the pointer.
+<DT><STRONG>The <TT>grab()</TT></STRONG>
+<DD>protected operation maps the object at the specified
+offset and sets the grabbed flag of the object.  The <TT>Window</TT> is not 
+unmapped during the object is grabbed.
+<P><DT><STRONG>The <TT>release()</TT></STRONG>
+<DD>protected operation clears the grabbed flag of 
+the object. The <TT>Window</TT> containing the object may be unmapped sooner 
+or later.
+<P><DT><STRONG>The <TT>grabReadOnly()</TT></STRONG>
+<DD>protected operation maps the object at the 
+specified offset and increments the counter for the read-only grabbings of 
+the object. The <TT>Window</TT> is not unmapped during the object is grabbed.
+<P><DT><STRONG>The <TT>releaseReadOnly()</TT></STRONG>
+<DD>protected operation decrements the counter
+for the read-only grabbings of the object.  The <TT>Window</TT> containing the 
+object may be unmapped if the counter is 0 and the grabbed flag is clear.
+<P><DT><STRONG>The <TT>synchronize()</TT></STRONG>
+<DD>protected operation synchronizes the 
+<TT>Window</TT> containing
+the specified offset with the storage file.  If the offset is not specified,
+the operation synchronizes all the <TT>Window</TT>s in the <TT>Arena</TT>.
+<P><DT><STRONG>The <TT>cleanUp()</TT></STRONG>
+<DD>protected operation unmaps all or some of the 
+removable 
+<TT>Window</TT>s in the <TT>Arena</TT>.  It also synchronizes the <TT>Window</TT>s
+before unmapping.  This operation is invoked by the <TT>PersistentStorage</TT> 
+at the appropriate timings.
+<P><DT><STRONG>The <TT>grow()</TT></STRONG>
+<DD>operation stretches the storage file of the 
+<TT>Arena</TT>
+by appending a new free block.  The sizes of the <TT>topChunk</TT> and of the 
+<TT>arenaSize</TT> grow up.  This operation is invoked by the 
+<TT>PersistentStorage</TT> when the <TT>topChunk</TT> is too small.
+</DL><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1184"
+ HREF="node69.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1180"
+ HREF="node64.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1174"
+ HREF="node67.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1182"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1183"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1185"
+ HREF="node69.html">Window Overlapping and Fragmentation</A>
+<B> Up:</B> <A NAME="tex2html1181"
+ HREF="node64.html">Arena Class</A>
+<B> Previous:</B> <A NAME="tex2html1175"
+ HREF="node67.html">Allocation</A>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

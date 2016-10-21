@@ -1,0 +1,135 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>ArenaID</TITLE>
+<META NAME="description" CONTENT="ArenaID">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node66.html">
+<LINK REL="previous" HREF="node64.html">
+<LINK REL="up" HREF="node64.html">
+<LINK REL="next" HREF="node66.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html1148"
+ HREF="node66.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1144"
+ HREF="node64.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1138"
+ HREF="node64.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1146"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1147"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1149"
+ HREF="node66.html">Other Members</A>
+<B> Up:</B> <A NAME="tex2html1145"
+ HREF="node64.html">Arena Class</A>
+<B> Previous:</B> <A NAME="tex2html1139"
+ HREF="node64.html">Arena Class</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H3><A NAME="SECTION00634100000000000000">
+<TT>ArenaID</TT></A>
+</H3>
+<A NAME="668">&#160;</A>
+<P>
+The member variable <TT>arenaID</TT> contains the identity of the
+<TT>Arena</TT> object as the name suggests.  At a glance, the <TT>arenaID</TT>
+need not have any structure in it, and a simple integer seems to
+meet the needs.  However, it is profoundly ineffective to allocate
+tiny objects and huge objects within the same <TT>Arena</TT> mainly because 
+the resulting fragmentations which would diverse in sizes through 
+the operations would severely degrade the performance of the internal
+operations for finding suitable free chunks for allocation.
+<P>
+The solutions for the bottleneck of the mixture of tiny and huge chunks
+within the same <TT>Arena</TT> must focus on the grouping of chunks by
+their sizes, which can be implemented by the array of <B>bin</B>s 
+(See Section <A HREF="node29.html#mallocmodel">2.4.1</A>).  Where are the bins in the persistent
+storage implementation?  The <TT>Arena</TT>s will surely and rightfully 
+suffice.
+<P>
+<BR>
+<DIV ALIGN="CENTER"><A NAME="arenaid">&#160;</A><A NAME="1399">&#160;</A>
+<TABLE>
+<CAPTION><STRONG>Figure 3.12:</STRONG>
+<I>Internal Structure of</I> <TT>ArenaID</TT></CAPTION>
+<TR><TD><IMG WIDTH="710" HEIGHT="102"
+ SRC="img15.gif"
+ ALT="\begin{figure}
+\begin{center}
+
+\includegraphics [scale=.9]{arenaid.ps}
+\end{center}\end{figure}"></TD></TR>
+</TABLE>
+</DIV>
+<BR>
+<P>
+In the Figure <A HREF="node65.html#arenaid">3.12</A>, the internal structure of the type
+<TT>ArenaID</TT> is shown.  The value <TT>m</TT> is obtained by the calculation
+<TT>(arenaID &gt;&gt; 24) &amp; 0x3f</TT>.  The value indicates the range of the size
+of chunks to be allocated in the <TT>Arena</TT>.  The value also shows
+the minimum size of the free chunks in the <TT>Arena</TT>, which means that
+no free chunks smaller than the size are generated through the allocation
+operations.
+<P>
+The range is shown by the expression <IMG WIDTH="151" HEIGHT="33" ALIGN="MIDDLE" BORDER="0"
+ SRC="img16.gif"
+ ALT="$ 2^{{\tt m} + 4} \leq {\tt size}
+< 2^{{\tt m} + 5} $">.  For example, when <TT>m = 4</TT>, the range is <IMG WIDTH="139" HEIGHT="27" ALIGN="MIDDLE" BORDER="0"
+ SRC="img17.gif"
+ ALT="$ 256 \leq
+{\tt size} < 512 $">.  To be more precise, the <TT>size</TT> is not the size of
+the object to be mapped, but the size of the chunk which contain the 
+<TT>Chunk</TT> object and the persistent object.  As the smallest chunk size
+is 16 = 2<SUP>4</SUP> bytes, 4 is added to <TT>m</TT>.
+<P>
+On the other hand, the variable <TT>n</TT> is assigned by just incrementing
+the last <TT>arenaID</TT> of the same range.
+<P><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1148"
+ HREF="node66.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1144"
+ HREF="node64.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1138"
+ HREF="node64.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1146"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1147"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1149"
+ HREF="node66.html">Other Members</A>
+<B> Up:</B> <A NAME="tex2html1145"
+ HREF="node64.html">Arena Class</A>
+<B> Previous:</B> <A NAME="tex2html1139"
+ HREF="node64.html">Arena Class</A>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

@@ -1,0 +1,96 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>PointerPair Class</TITLE>
+<META NAME="description" CONTENT="PointerPair Class">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="previous" HREF="node80.html">
+<LINK REL="up" HREF="node58.html">
+<LINK REL="next" HREF="node82.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html1338"
+ HREF="node82.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1334"
+ HREF="node58.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1330"
+ HREF="node80.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1336"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1337"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1339"
+ HREF="node82.html">Applications</A>
+<B> Up:</B> <A NAME="tex2html1335"
+ HREF="node58.html">Persistent Storage Classes</A>
+<B> Previous:</B> <A NAME="tex2html1331"
+ HREF="node80.html">PersistentObject Class</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H2><A NAME="SECTION006312000000000000000">
+<TT>PointerPair</TT> Class</A>
+</H2>
+<A NAME="1153">&#160;</A>
+<P>
+<BR>
+<DIV ALIGN="CENTER"><A NAME="pointerpair">&#160;</A><A NAME="1420">&#160;</A>
+<TABLE>
+<CAPTION><STRONG>Figure 3.23:</STRONG>
+<TT>PointerPair</TT> <I>Class</I></CAPTION>
+<TR><TD><IMG WIDTH="454" HEIGHT="336"
+ SRC="img28.gif"
+ ALT="\begin{figure}
+\begin{center}
+
+\includegraphics [scale=1]{PointerPair.ps}
+\end{center}\end{figure}"></TD></TR>
+</TABLE>
+</DIV>
+<BR>
+<P>
+The <TT>PointerPair</TT> class (See Figure <A HREF="node81.html#pointerpair">3.23</A>) is derived
+from the <TT>PersistentPointer</TT> class.  The additional feature of the 
+class is that it contains the reference pointer to the persistent object 
+that the <TT>PersistentPointer</TT> points.
+<P>
+As implemented in the <TT>OffsetChunkPair</TT> class (See Section 
+<A HREF="node77.html#offsetchunkpairdesc">3.3.8</A>), treating the double representations of 
+pointers to a persistent object as a pair is fairly effective.
+<P>
+In addition, using a persistent pointer placed in the persistent 
+storage leads to a serious collision problem.  When such pointer is
+grabbed, the grabbing flag in the persistent storage is modified.
+If the pointer is synchronized without clearing the flag, the pointer
+can not be grabbed afterwards.  In read-only grabbing, the collision
+becomes more serious.
+<P>
+For these two reasons, all the <TT>PersistentPointer</TT> objects must
+be manipulated on the usual main memory.  Copying the pointers to
+the <TT>PointerPair</TT> objects will meet the needs.
+<P>
+The reference pointer just converted is stored in the member variable
+<TT>obj</TT> and convertible to a pointer to a <TT>PersistentObject</TT> object.
+<P>
+<BR><HR>
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

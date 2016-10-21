@@ -1,0 +1,74 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Mapping and Unmapping</TITLE>
+<META NAME="description" CONTENT="Mapping and Unmapping">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node39.html">
+<LINK REL="previous" HREF="node37.html">
+<LINK REL="up" HREF="node36.html">
+<LINK REL="next" HREF="node39.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html757"
+ HREF="node39.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html753"
+ HREF="node36.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html747"
+ HREF="node37.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html755"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html756"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html758"
+ HREF="node39.html">Window Overlapping</A>
+<B> Up:</B> <A NAME="tex2html754"
+ HREF="node36.html">New Factors in Persistence</A>
+<B> Previous:</B> <A NAME="tex2html748"
+ HREF="node37.html">Synchronization</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H2><A NAME="SECTION00552000000000000000">
+Mapping and Unmapping</A>
+</H2>
+<A NAME="208">&#160;</A>
+<P>
+Since the total size of the persistent storage may exceed the available
+size of the main memory in the system, mappings of regions in the storage
+files must be controlled dynamically.  Mapping of a huge region whose size
+exceeds the available main memory causes swapping-outs of exceeded pages
+in the virtual memory system, and results in severe degradation of 
+performance.
+<P>
+Therefore, only small fragments of the storage files can be mapped on the
+main memory.  These fragments are frequently mapped and unmapped during
+operations.  It must be noted here that unmapping of a region which 
+contains an object under manipulation would surely lead to a system crash.
+<P>
+The conclusion is that a reference pointer has its own life cycle and
+the mapped region for the pointer must not be unmapped while the pointer
+is alive.
+<P>
+<BR><HR>
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

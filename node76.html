@@ -1,0 +1,148 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Chunk Class</TITLE>
+<META NAME="description" CONTENT="Chunk Class">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node77.html">
+<LINK REL="previous" HREF="node71.html">
+<LINK REL="up" HREF="node58.html">
+<LINK REL="next" HREF="node77.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html1280"
+ HREF="node77.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1276"
+ HREF="node58.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1270"
+ HREF="node75.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1278"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1279"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1281"
+ HREF="node77.html">OffsetChunkPair Class</A>
+<B> Up:</B> <A NAME="tex2html1277"
+ HREF="node58.html">Persistent Storage Classes</A>
+<B> Previous:</B> <A NAME="tex2html1271"
+ HREF="node75.html">Comparison Schemes</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H2><A NAME="SECTION00637000000000000000">
+<TT>Chunk</TT> Class</A>
+</H2>
+<A NAME="996">&#160;</A>
+<P>
+<BR>
+<DIV ALIGN="CENTER"><A NAME="chunk">&#160;</A><A NAME="1410">&#160;</A>
+<TABLE>
+<CAPTION><STRONG>Figure 3.18:</STRONG>
+<TT>Chunk</TT> <I>Class</I></CAPTION>
+<TR><TD><IMG WIDTH="528" HEIGHT="326"
+ SRC="img23.gif"
+ ALT="\begin{figure}
+\begin{center}
+
+\includegraphics [scale=1]{Chunk.ps}
+\end{center}\end{figure}"></TD></TR>
+</TABLE>
+</DIV>
+<BR>
+<P>
+The <TT>Chunk</TT> class (See Figure <A HREF="node76.html#chunk">3.18</A>) serves as the header
+of every allocation block in the <TT>Arena</TT> storage file.  The class
+in invisible from the user.
+<P>
+The object size of the class is 16 bytes, but only 8 bytes are used
+when the chunk is in use.  The unused part of the <TT>Chunk</TT> object
+is occupied by the first 8 bytes of the persistent object.
+<P>
+The member variable <TT>prevSize</TT> contains the size of the 
+<B>previous</B> chunk and serves as the link to it.  The member variable
+<TT>size</TT> contains the size of the chunk and two flags in its LSBs.
+Since all the chunks are aligned to the 16 byte boundaries, the 4 LSBs
+of the <TT>size</TT> can be used for other purposes.
+<P>
+One flag in the variable <TT>size</TT> indicates whether the <B>previous</B>
+chunk is in use or not.  The other flag indicates whether the chunk
+is dummy or not.  There are the accessors for manipulating these flags -
+<TT>isPrevInUse()</TT>, <TT>setPrevInUse()</TT>, <TT>clearPrevInUse()</TT>, 
+<TT>isDummy()</TT>, <TT>setDummy()</TT>, and <TT>clearDummy()</TT>. The dummy flag is 
+not fully implemented in the current version of the persistent storage.
+<P>
+The accessors for the variables <TT>size</TT> and <TT>prevSize</TT> are 
+<TT>getSize()</TT>, <TT>setSize()</TT>, <TT>getPrevSize()</TT>, and 
+<TT>setPrevSize()</TT>.  They do not affect the two flags in the LSBs.
+<P>
+The remaining member variables <TT>backward</TT> and <TT>forward</TT> are
+used only when the chunk is not in use, and contain the offsets of the
+previous and next free chunks, respectively.  These variables constitute
+the doubly-linked list of the free chunks in the <TT>Arena</TT> storage file.
+These variables have no accessors and are accessed directly by the 
+<TT>Arena</TT> operations, although there are no firm reasons for the missing
+of the accessors.
+<P>
+The constructor for the class takes all the variables and flags as
+the parameters, some of which are omittable.
+<P>
+The operation <TT>getMemBlock()</TT> is used at the last part of the 
+pointer conversion to the reference pointer.  Pointers to the <TT>Chunk</TT>
+objects are internally used for all the operations in the persistent
+storage, because the persistent storage does not care the contents of
+the persistent objects but the arrangements of the chunks in the persistent
+storage.  Conversely, the user does not care the internal arrangements but 
+only focuses on the reference pointers to the persistent objects.
+<P>
+Therefore, the conversions to the valid reference pointers are performed
+just before the pointers are handed to the user.  The operation returns
+the pointer to the member variable <TT>backward</TT>, which is casted to the 
+<TT>PointerType</TT> when returned.  The pointer is the starting address of
+the mapped persistent object.  (The <TT>PointerType</TT> is just the defined
+type for <TT>void *</TT>.)
+<P><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1280"
+ HREF="node77.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1276"
+ HREF="node58.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1270"
+ HREF="node75.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1278"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1279"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1281"
+ HREF="node77.html">OffsetChunkPair Class</A>
+<B> Up:</B> <A NAME="tex2html1277"
+ HREF="node58.html">Persistent Storage Classes</A>
+<B> Previous:</B> <A NAME="tex2html1271"
+ HREF="node75.html">Comparison Schemes</A>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

@@ -1,0 +1,127 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>SortableObject Interface</TITLE>
+<META NAME="description" CONTENT="SortableObject Interface">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node53.html">
+<LINK REL="previous" HREF="node51.html">
+<LINK REL="up" HREF="node51.html">
+<LINK REL="next" HREF="node53.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html970"
+ HREF="node53.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html966"
+ HREF="node51.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html960"
+ HREF="node51.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html968"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html969"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html971"
+ HREF="node53.html">SortedPointerTable Class</A>
+<B> Up:</B> <A NAME="tex2html967"
+ HREF="node51.html">SortedTable Classes</A>
+<B> Previous:</B> <A NAME="tex2html961"
+ HREF="node51.html">SortedTable Classes</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H3><A NAME="SECTION00622100000000000000">
+<TT>SortableObject</TT> Interface</A>
+</H3>
+<A NAME="sortableobjectdesc">&#160;</A><A NAME="315">&#160;</A>
+<P>
+<BR>
+<DIV ALIGN="CENTER"><A NAME="sortableobject">&#160;</A><A NAME="1380">&#160;</A>
+<TABLE>
+<CAPTION><STRONG>Figure 3.3:</STRONG>
+<TT>SortableObject</TT> <I>Interface</I></CAPTION>
+<TR><TD><IMG WIDTH="321" HEIGHT="188"
+ SRC="img6.gif"
+ ALT="\begin{figure}
+\begin{center}
+
+\includegraphics [scale=1]{SortableObject.ps}
+\end{center}\end{figure}"></TD></TR>
+</TABLE>
+</DIV>
+<BR>
+<P>
+The <TT>SortableObject</TT> interface (See Figure <A HREF="node52.html#sortableobject">3.3</A>) 
+shows the requirements for the elements of <TT>SortedTable</TT>.  
+Unfortunately, the class derivation and template mechanism are not flexible
+enough to use the <TT>SortableObject</TT> class as the base class for
+the element objects without tricky and awkward coding.  Thus, there is 
+no <I>real</I> C++ class named <TT>SortableObject</TT>.
+<P>
+The required operations for a <TT>SortableObject</TT> is fairly simple.
+It must provide the accessor for getting the key of the object and for
+its nullity.  Based on such key mechanisms, it must provide the operations
+for comparison with a key or another instance of the object.  The return
+values of comparisons conform to the conventions in <TT>strcmp()</TT> and
+<TT>qsort()</TT>.  For example, when the instance <TT>A</TT> is compared with
+the instance <TT>B</TT> via <TT>A.compare(B)</TT>, the operation returns
+<TT>0</TT> if <TT>A</TT> and <TT>B</TT> are equal, a positive value if <TT>A</TT> is 
+<I>greater</I> than <TT>B</TT>, a negative value if <TT>A</TT> is smaller 
+than <TT>B</TT>.
+<P>
+Similarly, when the instance <TT>A</TT> is compared with the key <TT>key</TT>
+via <TT>A.compare(key)</TT>, the operation returns an integer value with the
+same meaning as in <TT>A.compare(B)</TT>.
+<P>
+The key may not be explicitly declared in the object.  Instead, it
+can be generated each time it is requested.  Of course, the key of any 
+object must be constant throughout operations.
+<P>
+The static instance named <TT>nullObject</TT> is declared to return a
+null value by the operations of <TT>SortedTable</TT>.  All the keys 
+except for the <TT>nullObject</TT> must be non-null.
+<P><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html970"
+ HREF="node53.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html966"
+ HREF="node51.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html960"
+ HREF="node51.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html968"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html969"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html971"
+ HREF="node53.html">SortedPointerTable Class</A>
+<B> Up:</B> <A NAME="tex2html967"
+ HREF="node51.html">SortedTable Classes</A>
+<B> Previous:</B> <A NAME="tex2html961"
+ HREF="node51.html">SortedTable Classes</A>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

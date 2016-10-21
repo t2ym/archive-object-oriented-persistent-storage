@@ -1,0 +1,154 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Design of Persistent Storage</TITLE>
+<META NAME="description" CONTENT="Design of Persistent Storage">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node47.html">
+<LINK REL="previous" HREF="node4.html">
+<LINK REL="up" HREF="oops.html">
+<LINK REL="next" HREF="node21.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html506"
+ HREF="node21.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html502"
+ HREF="oops.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html496"
+ HREF="node19.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html504"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html505"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html507"
+ HREF="node21.html">Design Goals</A>
+<B> Up:</B> <A NAME="tex2html503"
+ HREF="oops.html">Object-Oriented Persistent Storage for</A>
+<B> Previous:</B> <A NAME="tex2html497"
+ HREF="node19.html">Object-Oriented Approaches</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H1><A NAME="SECTION00500000000000000000">
+Design of Persistent Storage</A>
+</H1>
+<P>
+<BR><HR>
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS">&#160;</A>
+<UL>
+<LI><A NAME="tex2html508"
+ HREF="node21.html#SECTION00510000000000000000">
+Design Goals</A>
+<LI><A NAME="tex2html509"
+ HREF="node22.html#SECTION00520000000000000000">
+Interfaces</A>
+<LI><A NAME="tex2html510"
+ HREF="node23.html#SECTION00530000000000000000">
+Addressing</A>
+<UL>
+<LI><A NAME="tex2html511"
+ HREF="node24.html#SECTION00531000000000000000">
+Persistent Pointers</A>
+<LI><A NAME="tex2html512"
+ HREF="node25.html#SECTION00532000000000000000">
+Reference Pointers</A>
+<LI><A NAME="tex2html513"
+ HREF="node26.html#SECTION00533000000000000000">
+Mapping and Address Conversion</A>
+<UL>
+<LI><A NAME="tex2html514"
+ HREF="node27.html#SECTION00533100000000000000">
+<TT>mmap()</TT> system call</A>
+</UL>
+</UL>
+<LI><A NAME="tex2html515"
+ HREF="node28.html#SECTION00540000000000000000">
+Allocation Algorithms</A>
+<UL>
+<LI><A NAME="tex2html516"
+ HREF="node29.html#SECTION00541000000000000000">
+C Heap Allocation Model</A>
+<UL>
+<LI><A NAME="tex2html517"
+ HREF="node30.html#SECTION00541100000000000000">
+<TT>malloc()</TT> routine</A>
+<LI><A NAME="tex2html518"
+ HREF="node31.html#SECTION00541200000000000000">
+<TT>free()</TT> routine</A>
+</UL>
+<LI><A NAME="tex2html519"
+ HREF="node32.html#SECTION00542000000000000000">
+C++ Object Instantiation</A>
+<UL>
+<LI><A NAME="tex2html520"
+ HREF="node33.html#SECTION00542100000000000000">
+<TT>new</TT> operator</A>
+<LI><A NAME="tex2html521"
+ HREF="node34.html#SECTION00542200000000000000">
+<TT>delete</TT> operator</A>
+</UL>
+<LI><A NAME="tex2html522"
+ HREF="node35.html#SECTION00543000000000000000">
+Generalization of the Algorithms</A>
+</UL>
+<LI><A NAME="tex2html523"
+ HREF="node36.html#SECTION00550000000000000000">
+New Factors in Persistence</A>
+<UL>
+<LI><A NAME="tex2html524"
+ HREF="node37.html#SECTION00551000000000000000">
+Synchronization</A>
+<LI><A NAME="tex2html525"
+ HREF="node38.html#SECTION00552000000000000000">
+Mapping and Unmapping</A>
+<LI><A NAME="tex2html526"
+ HREF="node39.html#SECTION00553000000000000000">
+Window Overlapping</A>
+</UL>
+<LI><A NAME="tex2html527"
+ HREF="node40.html#SECTION00560000000000000000">
+Primitive Operations</A>
+<UL>
+<LI><A NAME="tex2html528"
+ HREF="node41.html#SECTION00561000000000000000">
+<TT>Allocate</TT></A>
+<LI><A NAME="tex2html529"
+ HREF="node42.html#SECTION00562000000000000000">
+<TT>Destroy</TT></A>
+<LI><A NAME="tex2html530"
+ HREF="node43.html#SECTION00563000000000000000">
+<TT>Grab</TT></A>
+<LI><A NAME="tex2html531"
+ HREF="node44.html#SECTION00564000000000000000">
+<TT>Release</TT></A>
+<LI><A NAME="tex2html532"
+ HREF="node45.html#SECTION00565000000000000000">
+<TT>Synchronize</TT></A>
+<LI><A NAME="tex2html533"
+ HREF="node46.html#SECTION00566000000000000000">
+Sample Flowchart of Operations</A>
+</UL></UL>
+<!--End of Table of Child-Links-->
+<BR><HR>
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

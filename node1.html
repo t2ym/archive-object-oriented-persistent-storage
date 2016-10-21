@@ -1,0 +1,422 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Contents</TITLE>
+<META NAME="description" CONTENT="Contents">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node2.html">
+<LINK REL="previous" HREF="oops.html">
+<LINK REL="up" HREF="oops.html">
+<LINK REL="next" HREF="node2.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html152"
+ HREF="node2.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html149"
+ HREF="oops.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html143"
+ HREF="oops.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A>  
+<A NAME="tex2html151"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html153"
+ HREF="node2.html">List of Figures</A>
+<B> Up:</B> <A NAME="tex2html150"
+ HREF="oops.html">Object-Oriented Persistent Storage for</A>
+<B> Previous:</B> <A NAME="tex2html144"
+ HREF="oops.html">Object-Oriented Persistent Storage for</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<BR>
+<H2><A NAME="SECTION00100000000000000000">
+Contents</A>
+</H2>
+<!--Table of Contents-->
+<UL>
+<LI><A NAME="tex2html154"
+ HREF="node1.html#SECTION00100000000000000000">
+Contents</A>
+<LI><A NAME="tex2html155"
+ HREF="node2.html#SECTION00200000000000000000">
+List of Figures</A>
+<LI><A NAME="tex2html156"
+ HREF="node4.html#SECTION00400000000000000000">
+Backgrounds</A>
+<UL>
+<LI><A NAME="tex2html157"
+ HREF="node5.html#SECTION00410000000000000000">
+Basic Functions of Computers</A>
+<LI><A NAME="tex2html158"
+ HREF="node6.html#SECTION00420000000000000000">
+Various Storages</A>
+<LI><A NAME="tex2html159"
+ HREF="node7.html#SECTION00430000000000000000">
+Manipulation Schemes</A>
+<LI><A NAME="tex2html160"
+ HREF="node8.html#SECTION00440000000000000000">
+Advantages and Disadvantages</A>
+<LI><A NAME="tex2html161"
+ HREF="node9.html#SECTION00450000000000000000">
+Programming Interfaces</A>
+<UL>
+<LI><A NAME="tex2html162"
+ HREF="node10.html#SECTION00451000000000000000">
+Assembler Model</A>
+<LI><A NAME="tex2html163"
+ HREF="node11.html#SECTION00452000000000000000">
+C Model</A>
+<LI><A NAME="tex2html164"
+ HREF="node12.html#SECTION00453000000000000000">
+BASIC Model</A>
+<LI><A NAME="tex2html165"
+ HREF="node13.html#SECTION00454000000000000000">
+Lisp Model</A>
+<LI><A NAME="tex2html166"
+ HREF="node14.html#SECTION00455000000000000000">
+C++ Model</A>
+<LI><A NAME="tex2html167"
+ HREF="node15.html#SECTION00456000000000000000">
+Java Model</A>
+<LI><A NAME="tex2html168"
+ HREF="node16.html#SECTION00457000000000000000">
+Spreadsheet Model</A>
+<LI><A NAME="tex2html169"
+ HREF="node17.html#SECTION00458000000000000000">
+SQL Model</A>
+<LI><A NAME="tex2html170"
+ HREF="node18.html#SECTION00459000000000000000">
+Restrictions</A>
+</UL>
+<LI><A NAME="tex2html171"
+ HREF="node19.html#SECTION00460000000000000000">
+Object-Oriented Approaches</A>
+</UL>
+<LI><A NAME="tex2html172"
+ HREF="node20.html#SECTION00500000000000000000">
+Design of Persistent Storage</A>
+<UL>
+<LI><A NAME="tex2html173"
+ HREF="node21.html#SECTION00510000000000000000">
+Design Goals</A>
+<LI><A NAME="tex2html174"
+ HREF="node22.html#SECTION00520000000000000000">
+Interfaces</A>
+<LI><A NAME="tex2html175"
+ HREF="node23.html#SECTION00530000000000000000">
+Addressing</A>
+<UL>
+<LI><A NAME="tex2html176"
+ HREF="node24.html#SECTION00531000000000000000">
+Persistent Pointers</A>
+<LI><A NAME="tex2html177"
+ HREF="node25.html#SECTION00532000000000000000">
+Reference Pointers</A>
+<LI><A NAME="tex2html178"
+ HREF="node26.html#SECTION00533000000000000000">
+Mapping and Address Conversion</A>
+<UL>
+<LI><A NAME="tex2html179"
+ HREF="node27.html#SECTION00533100000000000000">
+<TT>mmap()</TT> system call</A>
+</UL>
+</UL>
+<LI><A NAME="tex2html180"
+ HREF="node28.html#SECTION00540000000000000000">
+Allocation Algorithms</A>
+<UL>
+<LI><A NAME="tex2html181"
+ HREF="node29.html#SECTION00541000000000000000">
+C Heap Allocation Model</A>
+<UL>
+<LI><A NAME="tex2html182"
+ HREF="node30.html#SECTION00541100000000000000">
+<TT>malloc()</TT> routine</A>
+<LI><A NAME="tex2html183"
+ HREF="node31.html#SECTION00541200000000000000">
+<TT>free()</TT> routine</A>
+</UL>
+<LI><A NAME="tex2html184"
+ HREF="node32.html#SECTION00542000000000000000">
+C++ Object Instantiation</A>
+<UL>
+<LI><A NAME="tex2html185"
+ HREF="node33.html#SECTION00542100000000000000">
+<TT>new</TT> operator</A>
+<LI><A NAME="tex2html186"
+ HREF="node34.html#SECTION00542200000000000000">
+<TT>delete</TT> operator</A>
+</UL>
+<LI><A NAME="tex2html187"
+ HREF="node35.html#SECTION00543000000000000000">
+Generalization of the Algorithms</A>
+</UL>
+<LI><A NAME="tex2html188"
+ HREF="node36.html#SECTION00550000000000000000">
+New Factors in Persistence</A>
+<UL>
+<LI><A NAME="tex2html189"
+ HREF="node37.html#SECTION00551000000000000000">
+Synchronization</A>
+<LI><A NAME="tex2html190"
+ HREF="node38.html#SECTION00552000000000000000">
+Mapping and Unmapping</A>
+<LI><A NAME="tex2html191"
+ HREF="node39.html#SECTION00553000000000000000">
+Window Overlapping</A>
+</UL>
+<LI><A NAME="tex2html192"
+ HREF="node40.html#SECTION00560000000000000000">
+Primitive Operations</A>
+<UL>
+<LI><A NAME="tex2html193"
+ HREF="node41.html#SECTION00561000000000000000">
+<TT>Allocate</TT></A>
+<LI><A NAME="tex2html194"
+ HREF="node42.html#SECTION00562000000000000000">
+<TT>Destroy</TT></A>
+<LI><A NAME="tex2html195"
+ HREF="node43.html#SECTION00563000000000000000">
+<TT>Grab</TT></A>
+<LI><A NAME="tex2html196"
+ HREF="node44.html#SECTION00564000000000000000">
+<TT>Release</TT></A>
+<LI><A NAME="tex2html197"
+ HREF="node45.html#SECTION00565000000000000000">
+<TT>Synchronize</TT></A>
+<LI><A NAME="tex2html198"
+ HREF="node46.html#SECTION00566000000000000000">
+Sample Flowchart of Operations</A>
+</UL>
+</UL>
+<LI><A NAME="tex2html199"
+ HREF="node47.html#SECTION00600000000000000000">
+Implementation in C++</A>
+<UL>
+<LI><A NAME="tex2html200"
+ HREF="node48.html#SECTION00610000000000000000">
+Naming Conventions</A>
+<LI><A NAME="tex2html201"
+ HREF="node49.html#SECTION00620000000000000000">
+Utility Classes</A>
+<UL>
+<LI><A NAME="tex2html202"
+ HREF="node50.html#SECTION00621000000000000000">
+<TT>MMap</TT> Class</A>
+<LI><A NAME="tex2html203"
+ HREF="node51.html#SECTION00622000000000000000">
+<TT>SortedTable</TT> Classes</A>
+<UL>
+<LI><A NAME="tex2html204"
+ HREF="node52.html#SECTION00622100000000000000">
+<TT>SortableObject</TT> Interface</A>
+<LI><A NAME="tex2html205"
+ HREF="node53.html#SECTION00622200000000000000">
+<TT>SortedPointerTable</TT> Class</A>
+<LI><A NAME="tex2html206"
+ HREF="node54.html#SECTION00622300000000000000">
+<TT>SortedObjectTable</TT> Class</A>
+</UL>
+<LI><A NAME="tex2html207"
+ HREF="node55.html#SECTION00623000000000000000">
+<TT>FileStat</TT> Class</A>
+<UL>
+<LI><A NAME="tex2html208"
+ HREF="node56.html#SECTION00623100000000000000">
+<TT>ScanDir</TT> Class</A>
+<LI><A NAME="tex2html209"
+ HREF="node57.html#SECTION00623200000000000000">
+<TT>RawFile</TT> Class</A>
+</UL>
+</UL>
+<LI><A NAME="tex2html210"
+ HREF="node58.html#SECTION00630000000000000000">
+Persistent Storage Classes</A>
+<UL>
+<LI><A NAME="tex2html211"
+ HREF="node59.html#SECTION00631000000000000000">
+Comprehensive Description</A>
+<UL>
+<LI><A NAME="tex2html212"
+ HREF="node60.html#SECTION00631100000000000000">
+Condensed Map of Classes</A>
+<LI><A NAME="tex2html213"
+ HREF="node61.html#SECTION00631200000000000000">
+Object Mapping</A>
+</UL>
+<LI><A NAME="tex2html214"
+ HREF="node62.html#SECTION00632000000000000000">
+<TT>PersistentStorage</TT> Class</A>
+<LI><A NAME="tex2html215"
+ HREF="node63.html#SECTION00633000000000000000">
+<TT>PersistentPointer</TT> Class</A>
+<LI><A NAME="tex2html216"
+ HREF="node64.html#SECTION00634000000000000000">
+<TT>Arena</TT> Class</A>
+<UL>
+<LI><A NAME="tex2html217"
+ HREF="node65.html#SECTION00634100000000000000">
+<TT>ArenaID</TT></A>
+<LI><A NAME="tex2html218"
+ HREF="node66.html#SECTION00634200000000000000">
+Other Members</A>
+<LI><A NAME="tex2html219"
+ HREF="node67.html#SECTION00634300000000000000">
+Allocation</A>
+<LI><A NAME="tex2html220"
+ HREF="node68.html#SECTION00634400000000000000">
+Mapping</A>
+<LI><A NAME="tex2html221"
+ HREF="node69.html#SECTION00634500000000000000">
+Window Overlapping and Fragmentation</A>
+</UL>
+<LI><A NAME="tex2html222"
+ HREF="node70.html#SECTION00635000000000000000">
+<TT>ArenaInitialBlock</TT> Class</A>
+<LI><A NAME="tex2html223"
+ HREF="node71.html#SECTION00636000000000000000">
+<TT>Window</TT> Class</A>
+<UL>
+<LI><A NAME="tex2html224"
+ HREF="node72.html#SECTION00636100000000000000">
+Accessors</A>
+<LI><A NAME="tex2html225"
+ HREF="node73.html#SECTION00636200000000000000">
+Constructors</A>
+<LI><A NAME="tex2html226"
+ HREF="node74.html#SECTION00636300000000000000">
+Operations</A>
+<LI><A NAME="tex2html227"
+ HREF="node75.html#SECTION00636400000000000000">
+Comparison Schemes</A>
+</UL>
+<LI><A NAME="tex2html228"
+ HREF="node76.html#SECTION00637000000000000000">
+<TT>Chunk</TT> Class</A>
+<LI><A NAME="tex2html229"
+ HREF="node77.html#SECTION00638000000000000000">
+<TT>OffsetChunkPair</TT> Class</A>
+<LI><A NAME="tex2html230"
+ HREF="node78.html#SECTION00639000000000000000">
+<TT>PersistentOffset</TT> Class</A>
+<LI><A NAME="tex2html231"
+ HREF="node79.html#SECTION006310000000000000000">
+<TT>Entry</TT> Class</A>
+<LI><A NAME="tex2html232"
+ HREF="node80.html#SECTION006311000000000000000">
+<TT>PersistentObject</TT> Class</A>
+<LI><A NAME="tex2html233"
+ HREF="node81.html#SECTION006312000000000000000">
+<TT>PointerPair</TT> Class</A>
+</UL>
+</UL>
+<LI><A NAME="tex2html234"
+ HREF="node82.html#SECTION00700000000000000000">
+Applications</A>
+<UL>
+<LI><A NAME="tex2html235"
+ HREF="node83.html#SECTION00710000000000000000">
+<TT>SimpleTree</TT> Class</A>
+<LI><A NAME="tex2html236"
+ HREF="node84.html#SECTION00720000000000000000">
+<TT>HtmlIndexer</TT> Class</A>
+</UL>
+<LI><A NAME="tex2html237"
+ HREF="node85.html#SECTION00800000000000000000">
+Performance Analysis</A>
+<UL>
+<LI><A NAME="tex2html238"
+ HREF="node86.html#SECTION00810000000000000000">
+Compiler Options</A>
+<UL>
+<LI><A NAME="tex2html239"
+ HREF="node87.html#SECTION00811000000000000000">
+Optimization</A>
+</UL>
+<LI><A NAME="tex2html240"
+ HREF="node88.html#SECTION00820000000000000000">
+Algorithms</A>
+<LI><A NAME="tex2html241"
+ HREF="node89.html#SECTION00830000000000000000">
+Operation Overheads</A>
+<LI><A NAME="tex2html242"
+ HREF="node90.html#SECTION00840000000000000000">
+Storage Overheads</A>
+</UL>
+<LI><A NAME="tex2html243"
+ HREF="node91.html#SECTION00900000000000000000">
+To Do</A>
+<UL>
+<LI><A NAME="tex2html244"
+ HREF="node92.html#SECTION00910000000000000000">
+Generalized Collection Classes</A>
+<LI><A NAME="tex2html245"
+ HREF="node93.html#SECTION00920000000000000000">
+Atomicity</A>
+<LI><A NAME="tex2html246"
+ HREF="node94.html#SECTION00930000000000000000">
+Security</A>
+<LI><A NAME="tex2html247"
+ HREF="node95.html#SECTION00940000000000000000">
+Robustness</A>
+<LI><A NAME="tex2html248"
+ HREF="node96.html#SECTION00950000000000000000">
+Concurrent/Parallel Operations</A>
+<LI><A NAME="tex2html249"
+ HREF="node97.html#SECTION00960000000000000000">
+Distributed Storage</A>
+</UL>
+<LI><A NAME="tex2html250"
+ HREF="node98.html#SECTION001000000000000000000">
+References</A>
+<LI><A NAME="tex2html251"
+ HREF="node99.html#SECTION001100000000000000000">
+The Sources</A>
+<UL>
+<LI><A NAME="tex2html252"
+ HREF="node100.html#SECTION001110000000000000000">
+<TT>PersistentStorage.h</TT></A>
+<LI><A NAME="tex2html253"
+ HREF="node101.html#SECTION001120000000000000000">
+<TT>PersistentStorage.cc</TT></A>
+<LI><A NAME="tex2html254"
+ HREF="node102.html#SECTION001130000000000000000">
+<TT>MMap.h</TT></A>
+<LI><A NAME="tex2html255"
+ HREF="node103.html#SECTION001140000000000000000">
+<TT>SortedTable.h</TT></A>
+<LI><A NAME="tex2html256"
+ HREF="node104.html#SECTION001150000000000000000">
+<TT>FileStat.h</TT></A>
+<LI><A NAME="tex2html257"
+ HREF="node105.html#SECTION001160000000000000000">
+<TT>Main.cc</TT></A>
+<LI><A NAME="tex2html258"
+ HREF="node106.html#SECTION001170000000000000000">
+<TT>Makefile</TT></A>
+</UL>
+<LI><A NAME="tex2html259"
+ HREF="node107.html#SECTION001200000000000000000">
+Index</A>
+</UL>
+<!--End of Table of Contents-->
+<BR><HR>
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

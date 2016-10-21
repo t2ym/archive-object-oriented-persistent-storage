@@ -1,0 +1,91 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>RawFile Class</TITLE>
+<META NAME="description" CONTENT="RawFile Class">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="previous" HREF="node56.html">
+<LINK REL="up" HREF="node55.html">
+<LINK REL="next" HREF="node58.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html1026"
+ HREF="node58.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1022"
+ HREF="node55.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1018"
+ HREF="node56.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1024"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1025"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1027"
+ HREF="node58.html">Persistent Storage Classes</A>
+<B> Up:</B> <A NAME="tex2html1023"
+ HREF="node55.html">FileStat Class</A>
+<B> Previous:</B> <A NAME="tex2html1019"
+ HREF="node56.html">ScanDir Class</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H3><A NAME="SECTION00623200000000000000">
+<TT>RawFile</TT> Class</A>
+</H3>
+<A NAME="421">&#160;</A>
+<P>
+<BR>
+<DIV ALIGN="CENTER"><A NAME="rawfile">&#160;</A><A NAME="1388">&#160;</A>
+<TABLE>
+<CAPTION><STRONG>Figure 3.6:</STRONG>
+<TT>RawFile</TT> <I>Class</I></CAPTION>
+<TR><TD><IMG WIDTH="414" HEIGHT="316"
+ SRC="img9.gif"
+ ALT="\begin{figure}
+\begin{center}
+
+\includegraphics [scale=1]{RawFile.ps}
+\end{center}\end{figure}"></TD></TR>
+</TABLE>
+</DIV>
+<BR>
+<P>
+The <TT>RawFile</TT> class (See Figure <A HREF="node57.html#rawfile">3.6</A>) is also derived from
+the <TT>FileStat</TT> class, and is the wrapper class for the low-level
+file I/O system calls.
+<P>
+There are two constructors for this class.  One takes the file name
+as the parameter, while the other takes the file descriptor.  They
+only store the parameters in the member variables.
+<P>
+The supported primitive operations are <TT>open()</TT>, <TT>create()</TT>,
+<TT>close()</TT>, <TT>read()</TT>, <TT>write()</TT>, and <TT>seek()</TT>, which
+correspond with the <TT>open()</TT>, <TT>creat()</TT>, <TT>close()</TT>, 
+<TT>read()</TT>, <TT>write()</TT>, and <TT>lseek()</TT> system calls, respectively.
+<P>
+There is little need for the explanation of each operation.  They
+are the unshakable standards in the C language.  The only feature
+to be explained is that the object does not close the opened file
+when destructed.
+<P>
+<BR><HR>
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

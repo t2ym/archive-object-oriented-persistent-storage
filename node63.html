@@ -1,0 +1,127 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>PersistentPointer Class</TITLE>
+<META NAME="description" CONTENT="PersistentPointer Class">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node64.html">
+<LINK REL="previous" HREF="node62.html">
+<LINK REL="up" HREF="node58.html">
+<LINK REL="next" HREF="node64.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html1119"
+ HREF="node64.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1115"
+ HREF="node58.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1109"
+ HREF="node62.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1117"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1118"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1120"
+ HREF="node64.html">Arena Class</A>
+<B> Up:</B> <A NAME="tex2html1116"
+ HREF="node58.html">Persistent Storage Classes</A>
+<B> Previous:</B> <A NAME="tex2html1110"
+ HREF="node62.html">PersistentStorage Class</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H2><A NAME="SECTION00633000000000000000">
+<TT>PersistentPointer</TT> Class</A>
+</H2>
+<A NAME="622">&#160;</A>
+<P>
+<BR>
+<DIV ALIGN="CENTER"><A NAME="persistentpointer">&#160;</A><A NAME="1395">&#160;</A>
+<TABLE>
+<CAPTION><STRONG>Figure 3.10:</STRONG>
+<TT>PersistentPointer</TT> <I>Class</I></CAPTION>
+<TR><TD><IMG WIDTH="754" HEIGHT="473"
+ SRC="img13.gif"
+ ALT="\begin{figure}
+\begin{center}
+
+\includegraphics [scale=1]{PersistentPointer.ps}
+\end{center}\end{figure}"></TD></TR>
+</TABLE>
+</DIV>
+<BR>
+<P>
+The <TT>PersisentPointer</TT> class (See Figure <A HREF="node63.html#persistentpointer">3.10</A>)
+represents the unique location in the persistent storage and serves as
+the identity of the pointed persistent object.
+<P>
+There are three constructors in the class.  The default constructor
+with no parameters generates a null pointer.  The constructor with 
+another <TT>PersistentPointer</TT> object as the parameter copies the
+<TT>arenaID</TT> and <TT>offset</TT> of the object but does not inherit
+the two grabbing flags.  Otherwise, the new object might have one of 
+the grabbing flags set without grabbing operation, which would lead
+to inconsistencies of operations.  The assignment operator <TT>=</TT>
+with another <TT>PersistentPointer</TT> object has the same feature.
+The constructor with two parameters <TT>(arenaID,offset)</TT> is not
+public and used by the <TT>PersistentStorage</TT> object to generate
+new pointers through the allocation.
+<P>
+The four public operations - <TT>grab()</TT>, <TT>release()</TT>, 
+<TT>grabReadOnly()</TT>, and <TT>releaseReadOnly()</TT> - just invoke
+the corresponding operations in the <TT>PersistentStorage</TT> 
+object, which 
+is obtained via the static function 
+<TT>PersistentStorage::getThePS()</TT>.
+<P>
+The comparison operators <TT>==</TT> and <TT>!=</TT> can be used with
+both another <TT>PersistentPointer</TT> object and an 
+integer <TT>0</TT>. 
+The assignment operator <TT>=</TT> can also be used with both types.
+<P>
+The accessors function as their names suggest and need no explanation.
+<P><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1119"
+ HREF="node64.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1115"
+ HREF="node58.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1109"
+ HREF="node62.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1117"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1118"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1120"
+ HREF="node64.html">Arena Class</A>
+<B> Up:</B> <A NAME="tex2html1116"
+ HREF="node58.html">Persistent Storage Classes</A>
+<B> Previous:</B> <A NAME="tex2html1110"
+ HREF="node62.html">PersistentStorage Class</A>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

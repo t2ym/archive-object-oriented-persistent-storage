@@ -1,0 +1,118 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Compiler Options</TITLE>
+<META NAME="description" CONTENT="Compiler Options">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node88.html">
+<LINK REL="previous" HREF="node85.html">
+<LINK REL="up" HREF="node85.html">
+<LINK REL="next" HREF="node87.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html1403"
+ HREF="node87.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1399"
+ HREF="node85.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1393"
+ HREF="node85.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1401"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1402"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1404"
+ HREF="node87.html">Optimization</A>
+<B> Up:</B> <A NAME="tex2html1400"
+ HREF="node85.html">Performance Analysis</A>
+<B> Previous:</B> <A NAME="tex2html1394"
+ HREF="node85.html">Performance Analysis</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H1><A NAME="SECTION00810000000000000000">
+Compiler Options</A>
+</H1>
+<A NAME="1233">&#160;</A>
+<P>
+The persistent storage system is developed on the <I>Linux</I> operating
+system version 2.0.29 with <I>GNU C/C++ Compiler version 2.7.2.1</I>.  
+The platform is an <I>IBM</I> compatible personal computer with <I>Intel 
+Pentium Processor 166MHz</I>.  The <I>GNU</I> <TT>libg++</TT> library is also
+required for the compilation.
+<P>
+The dependencies on the operating system are the <I>POSIX</I> standard 
+<TT>mmap()</TT> system call, the low-level I/O system calls, and the linear 
+32-bit logical address space.
+<P>
+There are a few <I>GNU G++</I> specific features in the sources.  One is
+the mechanism of the <TT>#pragma interface</TT> and the <TT>#pragma 
+implementation</TT> directives.  They are for generating real machine codes and
+objects in a specific object file and prevent the duplication of objects.
+Therefore, this is not essential for the porting of the persistent storage
+to other compilers.
+<P>
+Another feature lies in the generation of <TT>inline</TT> functions.  The
+compiler option <TT>-fno-default-inline</TT> causes the compiler to generate
+only the explicitly declared <TT>inline</TT> functions.  This is not essential
+for the porting, either.  In addition, the <TT>inline</TT> functions are not 
+generated without the <TT>-O3</TT> optimization option.
+<P>
+The exception handling mechanism through the <TT>try</TT>, <TT>throw</TT>, and 
+<TT>catch</TT> keywords are not fully implemented in the current version of the
+<I>GNU C++</I> and not implemented in the persistent storage.
+<P>
+<BR><HR>
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS">&#160;</A>
+<UL>
+<LI><A NAME="tex2html1405"
+ HREF="node87.html#SECTION00811000000000000000">
+Optimization</A>
+</UL>
+<!--End of Table of Child-Links-->
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1403"
+ HREF="node87.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1399"
+ HREF="node85.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1393"
+ HREF="node85.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1401"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1402"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1404"
+ HREF="node87.html">Optimization</A>
+<B> Up:</B> <A NAME="tex2html1400"
+ HREF="node85.html">Performance Analysis</A>
+<B> Previous:</B> <A NAME="tex2html1394"
+ HREF="node85.html">Performance Analysis</A>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

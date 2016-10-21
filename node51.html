@@ -1,0 +1,151 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>SortedTable Classes</TITLE>
+<META NAME="description" CONTENT="SortedTable Classes">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node55.html">
+<LINK REL="previous" HREF="node50.html">
+<LINK REL="up" HREF="node49.html">
+<LINK REL="next" HREF="node52.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html955"
+ HREF="node52.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html951"
+ HREF="node49.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html945"
+ HREF="node50.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html953"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html954"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html956"
+ HREF="node52.html">SortableObject Interface</A>
+<B> Up:</B> <A NAME="tex2html952"
+ HREF="node49.html">Utility Classes</A>
+<B> Previous:</B> <A NAME="tex2html946"
+ HREF="node50.html">MMap Class</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H2><A NAME="SECTION00622000000000000000">
+<TT>SortedTable</TT> Classes</A>
+</H2>
+<A NAME="sortedtabledesc">&#160;</A><A NAME="280">&#160;</A>
+<P>
+<BR>
+<DIV ALIGN="CENTER"><A NAME="sortedtable">&#160;</A><A NAME="1377">&#160;</A>
+<TABLE>
+<CAPTION><STRONG>Figure 3.2:</STRONG>
+<TT>SortedTable</TT> <I>Interface</I></CAPTION>
+<TR><TD><IMG WIDTH="641" HEIGHT="346"
+ SRC="img5.gif"
+ ALT="\begin{figure}
+\begin{center}
+
+\includegraphics [scale=1]{SortedTable.ps}
+\end{center}\end{figure}"></TD></TR>
+</TABLE>
+</DIV>
+<BR>
+<P>
+The <TT>SortedTable</TT> interface (See Figure <A HREF="node51.html#sortedtable">3.2</A>) is 
+implemented in the <TT>SortedPointerTable</TT> class and the 
+<TT>SortedObjectTable</TT> class.
+<P>
+Each class is a template class representing a sorted table of elements.
+The elements must implement the <TT>SortableObject</TT> interface.  Since
+the elements in the table is sorted, any element in the table is accessible
+via binary searching algorithm.
+<P>
+The constructors initialize the table by another table or just allocate
+the memory area for the table.
+<P>
+There are four overloaded operators - <TT>[key]</TT>, <TT>(index)</TT>,
+<TT>+= element</TT>, and <TT>-= key <I>or</I> element</TT>.  When an instance of
+the <TT>SortedTable</TT> is named <TT>table</TT>, <TT>table[key]</TT> returns the
+element with the <TT>key</TT>, <TT>table(index)</TT> returns the <TT>index</TT>-th
+element of the table where the index of the first element is <TT>0</TT>.
+The number of elements in the table is obtained by the accessor 
+<TT>getSize()</TT>.
+<P>
+The statement <TT>table += element</TT> inserts the element in the table.
+No two elements with the same key can be inserted in the table.  The 
+overloaded operator has two signatures - <TT>table -= key</TT> and  
+<TT>table -= element</TT>.  The former removes the element with the key from
+the table, whereas the latter removes the element which has the same
+identity as the specified element.
+<P>
+The operation <TT>removeAll()</TT> literally removes all elements in
+the table.
+<P>
+The remaining two operations - <TT>searchByKey()</TT> and 
+<TT>searchByElement()</TT> - should be used carefully.  These operations
+return the index which would be suitable for the element if it were to be
+inserted.  Therefore, these operation may return the next index of that
+of the last element, which is invalid in the <TT>table(index)</TT> operator.
+The element at the returned index may be different from or equal to the
+specified element.
+<P>
+<BR><HR>
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS">&#160;</A>
+<UL>
+<LI><A NAME="tex2html957"
+ HREF="node52.html#SECTION00622100000000000000">
+<TT>SortableObject</TT> Interface</A>
+<LI><A NAME="tex2html958"
+ HREF="node53.html#SECTION00622200000000000000">
+<TT>SortedPointerTable</TT> Class</A>
+<LI><A NAME="tex2html959"
+ HREF="node54.html#SECTION00622300000000000000">
+<TT>SortedObjectTable</TT> Class</A>
+</UL>
+<!--End of Table of Child-Links-->
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html955"
+ HREF="node52.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html951"
+ HREF="node49.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html945"
+ HREF="node50.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html953"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html954"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html956"
+ HREF="node52.html">SortableObject Interface</A>
+<B> Up:</B> <A NAME="tex2html952"
+ HREF="node49.html">Utility Classes</A>
+<B> Previous:</B> <A NAME="tex2html946"
+ HREF="node50.html">MMap Class</A>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

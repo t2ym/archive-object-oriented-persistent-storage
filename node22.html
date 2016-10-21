@@ -1,0 +1,163 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Interfaces</TITLE>
+<META NAME="description" CONTENT="Interfaces">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node23.html">
+<LINK REL="previous" HREF="node21.html">
+<LINK REL="up" HREF="node20.html">
+<LINK REL="next" HREF="node23.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html556"
+ HREF="node23.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html552"
+ HREF="node20.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html546"
+ HREF="node21.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html554"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html555"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html557"
+ HREF="node23.html">Addressing</A>
+<B> Up:</B> <A NAME="tex2html553"
+ HREF="node20.html">Design of Persistent Storage</A>
+<B> Previous:</B> <A NAME="tex2html547"
+ HREF="node21.html">Design Goals</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H1><A NAME="SECTION00520000000000000000">
+Interfaces</A>
+</H1>
+<A NAME="interfaces">&#160;</A>
+  As described above, the interfaces to the persistent storage must be
+harmonious with the C++ standard ones.  A flowchart of object manipulation
+is effective in the evaluation of such harmony.  Here is an example of
+object manipulation procedure.
+<P><PRE>
+Object *p = 0; // pointer declaration and initialization
+p = new Object(parameters, ...); // allocation and construction
+p-&gt;manipulate(parameters, ...); // manipulation
+delete p; p = 0; // destruction and deallocation; pointer invalidation
+</PRE>
+<P>
+<BR>
+<DIV ALIGN="CENTER"><A NAME="layers">&#160;</A><A NAME="1360">&#160;</A>
+<TABLE>
+<CAPTION><STRONG>Figure 2.1:</STRONG>
+<I>Layers of Object Manipulation</I></CAPTION>
+<TR><TD><IMG WIDTH="395" HEIGHT="296"
+ SRC="img1.gif"
+ ALT="\begin{figure}
+\begin{center}
+
+\includegraphics [scale=1]{layers.ps}
+\end{center}\end{figure}"></TD></TR>
+</TABLE>
+</DIV>
+<BR>
+<P>
+The flowchart of this manipulation is analyzed into four layers of
+operations (See Figure <A HREF="node22.html#layers">2.1</A>). The top layer is the identity 
+and reference layer.  The pointer serves as both the identity of the 
+object and the manipulation clue to it.  The assignment <TT>p&nbsp;=&nbsp;0 </TT> 
+after the <TT>delete</TT> operation means that the pointer is no longer 
+valid.
+<P>
+The second layer is the storage allocation layer.  The first half of
+the <TT>new</TT> operator and the second half of the <TT>delete</TT> operator
+are the allocation and the deallocation of storage block for the object,
+respectively.
+<P>
+The third layer is the object instantiation layer. The second half of
+the <TT>new</TT> operator and the first half of the <TT>delete</TT> operator
+are the construction and the destruction of the object, respectively.
+These operations are attained through the automatic execution of
+its constructor and destructor.
+<P>
+The fourth layer is the object manipulation layer.  A sequence of
+various manipulations on the object can be performed though there is 
+only one operation in this example.
+<P>
+All the objects in C++ have almost the same framework of life cycles.
+Local and static objects are different in that they are identified and 
+referenced by their variable names, constructors are called at the
+declaration and destructors are called at the end of their scopes.
+<P>
+<BR>
+<DIV ALIGN="CENTER"><A NAME="newlayers">&#160;</A><A NAME="1361">&#160;</A>
+<TABLE>
+<CAPTION><STRONG>Figure 2.2:</STRONG>
+<I>Layers of Persistent Object Manipulation</I></CAPTION>
+<TR><TD><IMG WIDTH="415" HEIGHT="370"
+ SRC="img2.gif"
+ ALT="\begin{figure}
+\begin{center}
+
+\includegraphics [scale=1]{newlayers.ps}
+\end{center}\end{figure}"></TD></TR>
+</TABLE>
+</DIV>
+<BR>
+<P>
+An analysis concludes that the extra operations required for the 
+implementation of the persistent storage reside in the different 
+representations of the identity and the reference of an object.  
+This means that there must be a new layer of object manipulation.
+The identity and reference layer must be divided into two layers:
+<B>the identity layer</B> and <B>the reference layer</B>.  In addition,
+the storage allocation layer must be placed between the identity layer
+and the reference layer.  In the reference layer, the persistent 
+identity of an object is converted to a normal pointer for reference
+and manipulation (See Figure <A HREF="node22.html#newlayers">2.2</A>).  If the object has
+already been instantiated in the persistent storage, the storage
+allocation layer and the instantiation layer are omitted.
+<P><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html556"
+ HREF="node23.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html552"
+ HREF="node20.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html546"
+ HREF="node21.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html554"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html555"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html557"
+ HREF="node23.html">Addressing</A>
+<B> Up:</B> <A NAME="tex2html553"
+ HREF="node20.html">Design of Persistent Storage</A>
+<B> Previous:</B> <A NAME="tex2html547"
+ HREF="node21.html">Design Goals</A>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

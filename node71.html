@@ -1,0 +1,138 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Window Class</TITLE>
+<META NAME="description" CONTENT="Window Class">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node76.html">
+<LINK REL="previous" HREF="node70.html">
+<LINK REL="up" HREF="node58.html">
+<LINK REL="next" HREF="node72.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html1218"
+ HREF="node72.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1214"
+ HREF="node58.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1208"
+ HREF="node70.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1216"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1217"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1219"
+ HREF="node72.html">Accessors</A>
+<B> Up:</B> <A NAME="tex2html1215"
+ HREF="node58.html">Persistent Storage Classes</A>
+<B> Previous:</B> <A NAME="tex2html1209"
+ HREF="node70.html">ArenaInitialBlock Class</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H2><A NAME="SECTION00636000000000000000">
+<TT>Window</TT> Class</A>
+</H2>
+<A NAME="875">&#160;</A>
+<P>
+<BR>
+<DIV ALIGN="CENTER"><A NAME="window">&#160;</A><A NAME="1407">&#160;</A>
+<TABLE>
+<CAPTION><STRONG>Figure 3.16:</STRONG>
+<TT>Window</TT> <I>Class</I></CAPTION>
+<TR><TD><IMG WIDTH="746" HEIGHT="433"
+ SRC="img21.gif"
+ ALT="\begin{figure}
+\begin{center}
+
+\includegraphics [scale=.87]{Window.ps}
+\end{center}\end{figure}"></TD></TR>
+</TABLE>
+</DIV>
+<BR>
+<P>
+The <TT>Window</TT> class (See Figure <A HREF="node71.html#window">3.16</A>) represents a mapping
+of a region of the <TT>Arena</TT> storage file in the main memory.  It 
+is derived from the <TT>MMap</TT> class (See Section <A HREF="node50.html#mmapdesc">3.2.1</A>), and 
+also implements the <TT>SortableObject</TT> interface (See Section 
+<A HREF="node52.html#sortableobjectdesc">3.2.2</A>).  The class is invisible from the user.
+<P>
+The significant extension of the class from the base class <TT>MMap</TT>
+is that it treats the mapped region as a collection of persistent objects.
+The member variable <TT>objectTable</TT> maintains the inventory of the 
+persistent objects mapped in the region.  Each element of the 
+<TT>objectTable</TT> is an instance of the <TT>PersistentOffset</TT> class
+(See Section <A HREF="node78.html#persistentoffsetdesc">3.3.9</A>), which handles the information
+on the object such as its offset, whether it is grabbed or not,
+whether it is in use or not, whether it is fragmented or not, and how 
+many pointers are read-only-grabbing the object.
+<P>
+The member variables <TT>totalGrabCount</TT> and <TT>totalGrabCountReadOnly</TT>
+are synchronized with the manipulations on the <TT>objectTable</TT>.  The 
+member variable <TT>dirty</TT> is the flag for the modifications on the 
+objects in the <TT>Window</TT> after the last synchronization.  This flag
+is not fully implemented in the current version of the persistent storage.
+<P>
+<BR><HR>
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS">&#160;</A>
+<UL>
+<LI><A NAME="tex2html1220"
+ HREF="node72.html#SECTION00636100000000000000">
+Accessors</A>
+<LI><A NAME="tex2html1221"
+ HREF="node73.html#SECTION00636200000000000000">
+Constructors</A>
+<LI><A NAME="tex2html1222"
+ HREF="node74.html#SECTION00636300000000000000">
+Operations</A>
+<LI><A NAME="tex2html1223"
+ HREF="node75.html#SECTION00636400000000000000">
+Comparison Schemes</A>
+</UL>
+<!--End of Table of Child-Links-->
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1218"
+ HREF="node72.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1214"
+ HREF="node58.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1208"
+ HREF="node70.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1216"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1217"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1219"
+ HREF="node72.html">Accessors</A>
+<B> Up:</B> <A NAME="tex2html1215"
+ HREF="node58.html">Persistent Storage Classes</A>
+<B> Previous:</B> <A NAME="tex2html1209"
+ HREF="node70.html">ArenaInitialBlock Class</A>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

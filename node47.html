@@ -1,0 +1,184 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Implementation in C++</TITLE>
+<META NAME="description" CONTENT="Implementation in C++">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node82.html">
+<LINK REL="previous" HREF="node20.html">
+<LINK REL="up" HREF="oops.html">
+<LINK REL="next" HREF="node48.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html865"
+ HREF="node48.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html861"
+ HREF="oops.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html855"
+ HREF="node46.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html863"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html864"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html866"
+ HREF="node48.html">Naming Conventions</A>
+<B> Up:</B> <A NAME="tex2html862"
+ HREF="oops.html">Object-Oriented Persistent Storage for</A>
+<B> Previous:</B> <A NAME="tex2html856"
+ HREF="node46.html">Sample Flowchart of Operations</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H1><A NAME="SECTION00600000000000000000">
+Implementation in C++</A>
+</H1>
+<P>
+In this chapter, a complete implementation of the persistent storage
+in C++ is described.  The description is only for ease of understanding 
+the fundamentals of the persistent storage.  More details must be 
+understood by tracing the sources (See Appendix <A HREF="node99.html#sources">A</A>), which 
+contain abundant and descriptive comments.
+<P>
+<BR><HR>
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS">&#160;</A>
+<UL>
+<LI><A NAME="tex2html867"
+ HREF="node48.html#SECTION00610000000000000000">
+Naming Conventions</A>
+<LI><A NAME="tex2html868"
+ HREF="node49.html#SECTION00620000000000000000">
+Utility Classes</A>
+<UL>
+<LI><A NAME="tex2html869"
+ HREF="node50.html#SECTION00621000000000000000">
+<TT>MMap</TT> Class</A>
+<LI><A NAME="tex2html870"
+ HREF="node51.html#SECTION00622000000000000000">
+<TT>SortedTable</TT> Classes</A>
+<UL>
+<LI><A NAME="tex2html871"
+ HREF="node52.html#SECTION00622100000000000000">
+<TT>SortableObject</TT> Interface</A>
+<LI><A NAME="tex2html872"
+ HREF="node53.html#SECTION00622200000000000000">
+<TT>SortedPointerTable</TT> Class</A>
+<LI><A NAME="tex2html873"
+ HREF="node54.html#SECTION00622300000000000000">
+<TT>SortedObjectTable</TT> Class</A>
+</UL>
+<LI><A NAME="tex2html874"
+ HREF="node55.html#SECTION00623000000000000000">
+<TT>FileStat</TT> Class</A>
+<UL>
+<LI><A NAME="tex2html875"
+ HREF="node56.html#SECTION00623100000000000000">
+<TT>ScanDir</TT> Class</A>
+<LI><A NAME="tex2html876"
+ HREF="node57.html#SECTION00623200000000000000">
+<TT>RawFile</TT> Class</A>
+</UL>
+</UL>
+<LI><A NAME="tex2html877"
+ HREF="node58.html#SECTION00630000000000000000">
+Persistent Storage Classes</A>
+<UL>
+<LI><A NAME="tex2html878"
+ HREF="node59.html#SECTION00631000000000000000">
+Comprehensive Description</A>
+<UL>
+<LI><A NAME="tex2html879"
+ HREF="node60.html#SECTION00631100000000000000">
+Condensed Map of Classes</A>
+<LI><A NAME="tex2html880"
+ HREF="node61.html#SECTION00631200000000000000">
+Object Mapping</A>
+</UL>
+<LI><A NAME="tex2html881"
+ HREF="node62.html#SECTION00632000000000000000">
+<TT>PersistentStorage</TT> Class</A>
+<LI><A NAME="tex2html882"
+ HREF="node63.html#SECTION00633000000000000000">
+<TT>PersistentPointer</TT> Class</A>
+<LI><A NAME="tex2html883"
+ HREF="node64.html#SECTION00634000000000000000">
+<TT>Arena</TT> Class</A>
+<UL>
+<LI><A NAME="tex2html884"
+ HREF="node65.html#SECTION00634100000000000000">
+<TT>ArenaID</TT></A>
+<LI><A NAME="tex2html885"
+ HREF="node66.html#SECTION00634200000000000000">
+Other Members</A>
+<LI><A NAME="tex2html886"
+ HREF="node67.html#SECTION00634300000000000000">
+Allocation</A>
+<LI><A NAME="tex2html887"
+ HREF="node68.html#SECTION00634400000000000000">
+Mapping</A>
+<LI><A NAME="tex2html888"
+ HREF="node69.html#SECTION00634500000000000000">
+Window Overlapping and Fragmentation</A>
+</UL>
+<LI><A NAME="tex2html889"
+ HREF="node70.html#SECTION00635000000000000000">
+<TT>ArenaInitialBlock</TT> Class</A>
+<LI><A NAME="tex2html890"
+ HREF="node71.html#SECTION00636000000000000000">
+<TT>Window</TT> Class</A>
+<UL>
+<LI><A NAME="tex2html891"
+ HREF="node72.html#SECTION00636100000000000000">
+Accessors</A>
+<LI><A NAME="tex2html892"
+ HREF="node73.html#SECTION00636200000000000000">
+Constructors</A>
+<LI><A NAME="tex2html893"
+ HREF="node74.html#SECTION00636300000000000000">
+Operations</A>
+<LI><A NAME="tex2html894"
+ HREF="node75.html#SECTION00636400000000000000">
+Comparison Schemes</A>
+</UL>
+<LI><A NAME="tex2html895"
+ HREF="node76.html#SECTION00637000000000000000">
+<TT>Chunk</TT> Class</A>
+<LI><A NAME="tex2html896"
+ HREF="node77.html#SECTION00638000000000000000">
+<TT>OffsetChunkPair</TT> Class</A>
+<LI><A NAME="tex2html897"
+ HREF="node78.html#SECTION00639000000000000000">
+<TT>PersistentOffset</TT> Class</A>
+<LI><A NAME="tex2html898"
+ HREF="node79.html#SECTION006310000000000000000">
+<TT>Entry</TT> Class</A>
+<LI><A NAME="tex2html899"
+ HREF="node80.html#SECTION006311000000000000000">
+<TT>PersistentObject</TT> Class</A>
+<LI><A NAME="tex2html900"
+ HREF="node81.html#SECTION006312000000000000000">
+<TT>PointerPair</TT> Class</A>
+</UL></UL>
+<!--End of Table of Child-Links-->
+<BR><HR>
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

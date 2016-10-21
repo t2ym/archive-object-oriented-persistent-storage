@@ -1,0 +1,78 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>new operator</TITLE>
+<META NAME="description" CONTENT="new operator">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node34.html">
+<LINK REL="previous" HREF="node32.html">
+<LINK REL="up" HREF="node32.html">
+<LINK REL="next" HREF="node34.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html698"
+ HREF="node34.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html694"
+ HREF="node32.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html688"
+ HREF="node32.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html696"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html697"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html699"
+ HREF="node34.html">delete operator</A>
+<B> Up:</B> <A NAME="tex2html695"
+ HREF="node32.html">C++ Object Instantiation</A>
+<B> Previous:</B> <A NAME="tex2html689"
+ HREF="node32.html">C++ Object Instantiation</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H3><A NAME="SECTION00542100000000000000">
+<TT>new</TT> operator</A>
+</H3>
+<A NAME="183">&#160;</A>
+<P>
+As described above, the <TT>new</TT> operator is just an interface to
+<TT>malloc()</TT> routine.  However, there are more features in the operator.
+<P>
+The statement
+<PRE>
+          Object *array = new Object[size](parameters, ...);
+</PRE>
+allocates a memory block of <TT>sizeof(Object) * size</TT> bytes, and the
+constructor of the object is called for each instance.  The <TT>size</TT>
+is stored at the extra bytes at the head of the memory block.
+<P>
+The statement
+<PRE>
+          Object *obj = new(place) Object(parameters, ...);
+</PRE>
+does not call the <TT>malloc()</TT> routine but places the object at the
+<TT>place</TT> which is a pointer to an appropriate memory block.  This
+scheme is integral to the interface to the mapping of objects in the 
+persistent storage.
+<P>
+<BR><HR>
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

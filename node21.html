@@ -1,0 +1,134 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Design Goals</TITLE>
+<META NAME="description" CONTENT="Design Goals">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node22.html">
+<LINK REL="previous" HREF="node20.html">
+<LINK REL="up" HREF="node20.html">
+<LINK REL="next" HREF="node22.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html544"
+ HREF="node22.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html540"
+ HREF="node20.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html534"
+ HREF="node20.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html542"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html543"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html545"
+ HREF="node22.html">Interfaces</A>
+<B> Up:</B> <A NAME="tex2html541"
+ HREF="node20.html">Design of Persistent Storage</A>
+<B> Previous:</B> <A NAME="tex2html535"
+ HREF="node20.html">Design of Persistent Storage</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H1><A NAME="SECTION00510000000000000000">
+Design Goals</A>
+</H1>
+<P>
+In this chapter, a portable design of persistent storage interface
+for C++ is presented.  The requirements for a implementation of the
+design are a small set of standard system calls and main memory with
+linear logical address space.  The design can be used as a foundation
+of an ODBMS.
+<P>
+Some commercial implementations of ODBMS's trap segmentation faults
+to map objects from persistent storages. [<A
+ HREF="node98.html#oodb">Khoshafian 93</A>] To be sure, this 
+approach to persistent objects does not alter the standard interface
+to object instantiations and references, but a pointer to a persistent
+object is a normal C++ pointer and can not be used as a persistent
+identity of the object.  In addition, it is not easy to achieve
+portability by such addressing mechanism.
+<P>
+There are other implementations that do not trap segmentation faults
+to map objects and provide unique mechanisms for object identity other
+than normal pointers.  These implementations require explicit conversion
+from a persistent identity of an object to a pointer to its representation
+in main memory.
+<P>
+The design in this chapter is aiming at the latter types.  The dependency
+on the architecture of the platform operating system is at the minimum
+level.  The design introduces a persistent pointer object convertible to
+a normal C++ pointer for manipulation of the pointed object.  The persistent
+pointer also serves as the identity of the pointed object.  There should be
+few restrictions on the construction of an ODBMS based on the persistent 
+storage.
+<P>
+The design goals are summarized as follows:
+<P>
+<UL>
+<LI> Maximum portability and flexibility must be chased.
+<LI> Interfaces must be harmonious with the C++ standard interfaces.
+<LI> Access to both main storage and secondary storage must be lessened.
+<LI> Total storage size must be limited only by the platform operating system.
+<LI> Pointer conversions should be light-weight procedures.
+<LI> Operations should be extensible to concurrent and/or parallel ones.
+<LI> Of course, operations must be object-oriented.
+</UL>
+
+<P><A NAME="analogy">&#160;</A>  The design goals can be depicted by an analogy of a bookshelf and a desk.
+Persistent objects in secondary storage are information in closed files
+on the bookshelf.  Persistent objects mapped in main memory are information 
+in files on the desk.  Persistent objects the persistent pointers of which 
+are converted to normal pointers are information in opened pages of the files 
+on the desk.
+<P>
+The space on the desk is so limited that only a small part of the files
+on the bookshelf can be opened simultaneously.  Nevertheless, the whole 
+information on the bookshelf should be searched and modified smoothly.  
+The problem is which files to bring out from the bookshelf and which files to
+bring back to the bookshelf during operations.
+<P><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html544"
+ HREF="node22.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html540"
+ HREF="node20.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html534"
+ HREF="node20.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html542"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html543"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html545"
+ HREF="node22.html">Interfaces</A>
+<B> Up:</B> <A NAME="tex2html541"
+ HREF="node20.html">Design of Persistent Storage</A>
+<B> Previous:</B> <A NAME="tex2html535"
+ HREF="node20.html">Design of Persistent Storage</A>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

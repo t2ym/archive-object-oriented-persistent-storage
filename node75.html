@@ -1,0 +1,119 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Comparison Schemes</TITLE>
+<META NAME="description" CONTENT="Comparison Schemes">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="previous" HREF="node74.html">
+<LINK REL="up" HREF="node71.html">
+<LINK REL="next" HREF="node76.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html1268"
+ HREF="node76.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1264"
+ HREF="node71.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1260"
+ HREF="node74.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1266"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1267"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1269"
+ HREF="node76.html">Chunk Class</A>
+<B> Up:</B> <A NAME="tex2html1265"
+ HREF="node71.html">Window Class</A>
+<B> Previous:</B> <A NAME="tex2html1261"
+ HREF="node74.html">Operations</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H3><A NAME="SECTION00636400000000000000">
+Comparison Schemes</A>
+</H3>
+<P>
+<BR>
+<DIV ALIGN="CENTER"><A NAME="windowcomparison">&#160;</A><A NAME="1408">&#160;</A>
+<TABLE>
+<CAPTION><STRONG>Figure 3.17:</STRONG>
+<I>Scheme for Window Comparison</I></CAPTION>
+<TR><TD><IMG WIDTH="246" HEIGHT="308"
+ SRC="img22.gif"
+ ALT="\begin{figure}
+\begin{center}
+
+\includegraphics [scale=0.8]{windowcomparison.ps}
+\end{center}\end{figure}"></TD></TR>
+</TABLE>
+</DIV>
+<BR>
+<P>
+The class implements the <TT>SortableObject</TT> interface and can be
+compared with another <TT>Window</TT> object or an offset.  Additionally,
+there are two comparison operations with another <TT>Window</TT> object.
+One is the <TT>isContainedBy(window)</TT>, the other is 
+<TT>isSeparatedFrom(window)</TT>.  They function as their names suggest.
+<P>
+The most complicated issue on the comparison schemes for the 
+<TT>Window</TT> object is that there are two different comparison schemes.  
+One scheme is just checking whether the compared offset is before, after, 
+or within the mapped range of the <TT>Window</TT> object.
+<P>
+The other scheme (See Figure <A HREF="node75.html#windowcomparison">3.17</A>) is 
+<I>fragmentation-sensitive</I>.  The <B>equality zone</B> of the mapped region 
+is the region which contains only non-fragmented objects.  When the compared
+offset is within the equality zone, the offset is <B>equal</B> to the 
+<TT>Window</TT> object.  When the compared offset is before or after the 
+equality zone, the offset is <B>smaller</B> or <B>larger</B> than the
+<TT>Window</TT> object, respectively.
+<P>
+On the other hand, the scheme for comparison with another <TT>Window</TT> 
+object is fairly simple.  The beginning <TT>offset</TT>s of the <TT>Window</TT>s
+serve as the keys for comparison.  If the keys are equal, the larger 
+<TT>Window</TT> is the <B>larger</B>.
+<P><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1268"
+ HREF="node76.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1264"
+ HREF="node71.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1260"
+ HREF="node74.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1266"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1267"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1269"
+ HREF="node76.html">Chunk Class</A>
+<B> Up:</B> <A NAME="tex2html1265"
+ HREF="node71.html">Window Class</A>
+<B> Previous:</B> <A NAME="tex2html1261"
+ HREF="node74.html">Operations</A>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

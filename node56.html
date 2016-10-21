@@ -1,0 +1,137 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>ScanDir Class</TITLE>
+<META NAME="description" CONTENT="ScanDir Class">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node57.html">
+<LINK REL="previous" HREF="node55.html">
+<LINK REL="up" HREF="node55.html">
+<LINK REL="next" HREF="node57.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html1016"
+ HREF="node57.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1012"
+ HREF="node55.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1006"
+ HREF="node55.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1014"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1015"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1017"
+ HREF="node57.html">RawFile Class</A>
+<B> Up:</B> <A NAME="tex2html1013"
+ HREF="node55.html">FileStat Class</A>
+<B> Previous:</B> <A NAME="tex2html1007"
+ HREF="node55.html">FileStat Class</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H3><A NAME="SECTION00623100000000000000">
+<TT>ScanDir</TT> Class</A>
+</H3>
+<A NAME="394">&#160;</A>
+<P>
+<BR>
+<DIV ALIGN="CENTER"><A NAME="scandir">&#160;</A><A NAME="1386">&#160;</A>
+<TABLE>
+<CAPTION><STRONG>Figure 3.5:</STRONG>
+<TT>ScanDir</TT> <I>Class</I></CAPTION>
+<TR><TD><IMG WIDTH="321" HEIGHT="302"
+ SRC="img8.gif"
+ ALT="\begin{figure}
+\begin{center}
+
+\includegraphics [scale=1]{ScanDir.ps}
+\end{center}\end{figure}"></TD></TR>
+</TABLE>
+</DIV>
+<BR>
+<P>
+The <TT>ScanDir</TT> class (See Figure <A HREF="node56.html#scandir">3.5</A>) is derived from
+the <TT>FileStat</TT> class, and is the wrapper class for the <TT>scandir()</TT> 
+routine, which obtains the entries of a directory in file systems.
+<P>
+The constructor takes two parameters - the path and the wildcard for
+the entries.  It checks if the path is a directory, and then calls
+the <TT>scandir()</TT> routine to obtain the table of the entries.
+<P>
+Although the routine itself has the mechanism for wildcard searching,
+the mechanism is not compatible with non-static member functions, which
+take hidden <TT>this</TT> pointers.  Instead, this class utilizes the 
+encapsulated regular expression class <TT>Regex</TT> from <TT>libg++</TT> to
+realize wildcard searching.
+<P>
+The operation <TT>entries()</TT> returns the total number of the entries
+matching the wildcard.  This operation is not efficient in the counting
+because the <TT>scandir()</TT> routine is invoked with no wildcards and
+the matching entries must be checked one by one.  However, the calculated
+total number is stored in the member <TT>entry</TT> and used for prompt
+response next time.
+<P>
+The object has the internal state for obtaining the entries.  The
+member <TT>index</TT> contains the index in the <TT>namelist</TT> array 
+for searching the next entry.  The operation <TT>initFilter()</TT>
+resets the <TT>index</TT> as <TT>0</TT> in order to rewind the searching.
+The operation <TT>getNextEntry()</TT> returns the next matching entry.
+It returns null when there are no more entries.
+<P>
+The following is a sample usage of the class.
+<P><PRE>
+ScanDir dir(&quot;.&quot;, &quot;.*\\.tex&quot;); // *.tex files in the current directory
+const char *entry;
+dir.initFilter();
+while ((entry = dir.getNextEntry()) != 0)
+  cout &lt;&lt; entry &lt;&lt; endl;
+</PRE>
+<P>
+The wildcard matches only when the whole file name matches the 
+regular expression.
+<P><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1016"
+ HREF="node57.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1012"
+ HREF="node55.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1006"
+ HREF="node55.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1014"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1015"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1017"
+ HREF="node57.html">RawFile Class</A>
+<B> Up:</B> <A NAME="tex2html1013"
+ HREF="node55.html">FileStat Class</A>
+<B> Previous:</B> <A NAME="tex2html1007"
+ HREF="node55.html">FileStat Class</A>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

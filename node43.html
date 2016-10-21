@@ -1,0 +1,76 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Grab</TITLE>
+<META NAME="description" CONTENT="Grab">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node44.html">
+<LINK REL="previous" HREF="node42.html">
+<LINK REL="up" HREF="node40.html">
+<LINK REL="next" HREF="node44.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html819"
+ HREF="node44.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html815"
+ HREF="node40.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html809"
+ HREF="node42.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html817"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html818"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html820"
+ HREF="node44.html">Release</A>
+<B> Up:</B> <A NAME="tex2html816"
+ HREF="node40.html">Primitive Operations</A>
+<B> Previous:</B> <A NAME="tex2html810"
+ HREF="node42.html">Destroy</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H2><A NAME="SECTION00563000000000000000">
+<TT>Grab</TT></A>
+</H2>
+<A NAME="225">&#160;</A>
+<P>
+The primitive operation <TT>Grab</TT> is an operation in the reference
+layer.  It maps the object specified by a persistent pointer in the main 
+memory and returns the reference pointer to the object.  It returns
+null in failure.
+<P>
+While an object is grabbed, the object is kept in the main memory and
+the reference pointer to it is guaranteed to be valid.
+<P>
+There must be two types of grabbing operations.  One is the exclusive
+grabbing which allows modification of the object.  No two persistent
+pointers can be converted to the reference pointer by the operation
+simultaneously.
+<P>
+The other is the read-only grabbing which forbids modification of the 
+object and allows only reference of the object.  More than one
+persistent pointer can be converted to the read-only reference pointer
+by the operation simultaneously.
+<P>
+<BR><HR>
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

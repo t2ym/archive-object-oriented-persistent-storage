@@ -1,0 +1,303 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>MMap.h</TITLE>
+<META NAME="description" CONTENT="MMap.h">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node103.html">
+<LINK REL="previous" HREF="node101.html">
+<LINK REL="up" HREF="node99.html">
+<LINK REL="next" HREF="node103.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html1603"
+ HREF="node103.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1599"
+ HREF="node99.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1593"
+ HREF="node101.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1601"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1602"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1604"
+ HREF="node103.html">SortedTable.h</A>
+<B> Up:</B> <A NAME="tex2html1600"
+ HREF="node99.html">The Sources</A>
+<B> Previous:</B> <A NAME="tex2html1594"
+ HREF="node101.html">PersistentStorage.cc</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H1><A NAME="SECTION001130000000000000000">
+<TT>MMap.h</TT></A>
+</H1>
+
+<PRE>
+// MMap.h -- mmap() system call wrapper class
+// 11/4/97
+// 11/29/97 modified for private mappings of /dev/zero
+
+#ifndef __MMAP_H
+#define __MMAP_H
+#pragma interface &quot;MMap.h&quot;
+
+#include &lt;sys/mman.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;sys/stat.h&gt;
+
+/*
+  MMap -- wrapper class for the system call mmap()
+
+  This wrapper class provides a simple interface to the system call mmap().
+  The object contains:
+  int         fd -- the file descriptor of the file to be mapped
+  const char *fileName -- the name of the file to be mapped
+  size_t      length -- the length of the mapped region in bytes
+  off_t       offset -- the offset of the mapped region in the file
+  int         prot -- the protection mode of the mapping
+  int         flags -- the flags of the mapping
+  void       *paddr -- the address of the mapped region in the main memory
+ */
+class MMap {
+protected:
+  int fd;  // file descriptor
+  char *fileName; // file name
+  size_t length; // length of the mapped region in bytes
+  off_t offset;  // offset of the mapped region in the file
+  int prot; // protection mode of mmap
+  int flags; // mmap flags
+  void *paddr; // mapped addr in main memory
+
+public:
+  // constructors
+  
+  /*
+    MMap(fd) -- constructor by a file descriptor
+
+    parameters:
+    int FD -- the file descriptor 
+    int p -- the protection mode
+   */
+  MMap(int FD = -1, int p = PROT_READ | PROT_WRITE): 
+    fd(FD), 
+    fileName(0), 
+    prot(p), 
+    flags(MAP_SHARED), 
+    paddr(0) {}
+
+  /*
+    MMap(MMap &amp;) -- constructor by another MMap object
+
+    parameter:
+    MMap &amp;m -- the MMap object, whose mapping is not inherited
+   */
+  MMap(MMap &amp;m): 
+    fd(m.fd), 
+    fileName(0), 
+    prot(m.prot), 
+    flags(m.flags), 
+    paddr(0) {}
+
+  /*
+    MMap(file) -- general constructor by a file name
+
+    parameters:
+    const char *file -- the file name for mapping
+    int p -- the protection mode
+   */
+  MMap(const char *file, int p = PROT_READ | PROT_WRITE) : paddr(0) {
+    struct stat st;
+    static const char DevZero[] = &quot;/dev/zero&quot;;
+    if (file == 0) { 
+      fd = -1; 
+      return; 
+    } 
+    if (strcmp(file, DevZero) != 0) {
+      if (stat(file, &amp;st) != 0) { 
+        fd = -1; 
+        return; 
+      }
+      if (!S_ISREG(st.st_mode)) { 
+        fd = -1; 
+        return; 
+      }
+      if (st.st_size &lt;= 0) { 
+        fd = -1; 
+        return; 
+      }
+    }
+    if (p &amp; PROT_WRITE) {
+      if ((fd = open(file, O_RDWR)) == -1) { 
+        fd = -1; 
+        return; 
+      }
+    } else {
+      if ((fd = open(file, O_RDONLY)) == -1) { 
+        fd = -1; 
+        return; 
+      }
+    }
+    fileName = new char[strlen(file) + 1];
+    strcpy(fileName, file);
+    prot = p;
+    if (strcmp(file, DevZero) != 0) {
+      flags = MAP_SHARED;
+    } else {
+      flags = MAP_PRIVATE; 
+    }
+  }
+
+  /*
+    assignment operater with another MMap object
+
+    parameter:
+    MMap &amp;m -- another MMap object, whose mapping is not inherited
+   */
+  MMap &amp;operator=(MMap &amp;m) { 
+    fd = m.fd;
+    fileName = 0;
+    prot = m.prot; 
+    flags = m.flags; 
+    paddr = 0;
+    return *this;
+  }
+
+  /* 
+     ~MMap() -- destructor
+     
+     This destructor unmaps the existing mapping.
+   */
+  ~MMap() {
+    if (fd != -1 &amp;&amp; paddr != 0) {
+      this-&gt;unmap();
+      if (fileName) {
+        close(fd);
+      }
+    }
+  }
+
+  /* 
+     map -- map a region to the main memory
+     
+     parameters:
+     off_t  off -- the offset of the beginning of the region in the file
+     size_t len -- the length of the region in bytes
+
+     return value:
+     void * -- the address of the mapped region in the main memory,
+               0 when mapping failed
+   */
+  void *map(off_t off, size_t len) {
+    if (fd == -1) 
+      return 0; 
+    if (paddr != 0) // already mapped
+      munmap(paddr, length); // unmap the previous mapping
+    
+    paddr = mmap(0, len, prot, flags, fd, off);
+    if ((int)paddr == -1) { 
+      paddr = 0; 
+      return 0; 
+    }
+    offset = off;
+    length = len; 
+    return paddr;
+  }
+
+  /*
+    unmap -- unmap the region
+
+    parameter: none
+
+    return value:
+    int -- -1 when unmapping failed
+   */
+  int unmap() {
+    if (fd == -1) 
+      return -1; 
+    if (paddr == 0)
+      return -1; 
+    if (munmap(paddr, length) != 0) {
+      return -1;
+    } else {
+      paddr = 0;
+      return 0;
+    }
+  }
+
+  /*
+    sync -- synchronize the memory with the file
+
+    parameter:
+    int syncflags -- MS_SYNC for synchronous operation,
+                     MS_ASYNC for asynchronous operation
+
+    return value:
+    int -- -1 when synchronization failed
+   */
+  int sync(int syncflags = MS_SYNC) {
+    if (fd == -1) 
+      return -1; 
+    if (paddr == 0) 
+      return -1;
+    if (msync(paddr, length, syncflags) != 0)
+      return -1; 
+    else
+      return 0;
+  }
+
+  // accessors
+
+  // get the file descriptor
+  int getFd() { 
+    return fd; 
+  }
+
+  // get the file name
+  const char *getFileName() { 
+    return fileName; 
+  }
+
+  // get the address of the mapped region in the main memory
+  inline void *getAddr() { 
+    return paddr; 
+  }
+
+  // get the length of the mapped region
+  inline size_t getLength() { 
+    return paddr ? length : -1; 
+  }
+
+  // get the offset of the mapped region in the file
+  inline off_t getOffset() { 
+    return paddr ? offset : -1; 
+  }
+};
+
+#endif // __MMAP_H
+</PRE>
+
+<P>
+<BR><HR>
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

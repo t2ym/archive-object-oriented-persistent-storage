@@ -1,0 +1,707 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>SortedTable.h</TITLE>
+<META NAME="description" CONTENT="SortedTable.h">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node104.html">
+<LINK REL="previous" HREF="node102.html">
+<LINK REL="up" HREF="node99.html">
+<LINK REL="next" HREF="node104.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html1615"
+ HREF="node104.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1611"
+ HREF="node99.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1605"
+ HREF="node102.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1613"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1614"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1616"
+ HREF="node104.html">FileStat.h</A>
+<B> Up:</B> <A NAME="tex2html1612"
+ HREF="node99.html">The Sources</A>
+<B> Previous:</B> <A NAME="tex2html1606"
+ HREF="node102.html">MMap.h</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H1><A NAME="SECTION001140000000000000000">
+<TT>SortedTable.h</TT></A>
+</H1>
+
+<PRE>
+// SortedTable.h
+// a table of pointers to objects which is sortable by key
+// 11/16/97 Mori Tetsuya
+// 12/16/97 Add removeAll()
+
+#ifndef __SortedTable_H
+#define __SortedTable_H
+#pragma interface &quot;SortedTable.h&quot;
+
+#include &lt;iostream.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+#ifndef __BASIC_TYPES__
+#define __BASIC_TYPES__
+typedef int Integer32;
+typedef Integer32 SizeType;
+typedef Integer32 OffsetType;
+typedef Integer32 CounterType;
+typedef Integer32 ArenaID;
+typedef Integer32 EntryID;
+typedef Integer32 BoolType;
+enum { True = 1, False = 0 };
+typedef Integer32 ComparisonType;
+enum { GreaterThan = 1, EqualTo = 0, LessThan = 1 };
+typedef void *PointerType;
+
+#endif // __BASIC_TYPES__
+
+#define CACHE
+
+template&lt;class DerivedSortableObject, class Key&gt;
+class SortableObject {
+public:
+  virtual ~SortableObject() {}
+  virtual ComparisonType compare(Key &amp;k) = 0;
+  virtual ComparisonType compare(DerivedSortableObject &amp;o) = 0;
+  virtual Key getKey() = 0;
+  // static DerivedSortableObject nullObject; 
+  virtual BoolType isNull() = 0;
+};
+
+// Object must be one of the basic objects of C++ language
+// the Object itself is identical to its key
+// null object is 0
+template&lt;class Object&gt;
+class SimpleSortableObject {
+protected:
+  Object obj;
+public:
+  SimpleSortableObject() {}
+  SimpleSortableObject(Object o): obj(o) {}
+  ~SimpleSortableObject() {}
+  inline Object &amp;operator =(Object o) {
+    return obj = o;
+  }
+  inline int compare(Object &amp;o) {
+    // cout &lt;&lt; &quot;comparing &quot; &lt;&lt; obj &lt;&lt; &quot; with &quot; &lt;&lt; o &lt;&lt; endl;
+    return obj &gt; o ? 1 : obj &lt; o ? -1 : 0;
+  }
+  inline int compare(SimpleSortableObject &amp;e) {
+    // cout &lt;&lt; &quot;comparing &quot; &lt;&lt; obj &lt;&lt; &quot; with &quot; &lt;&lt; e.obj &lt;&lt; endl;
+    return obj &gt; e.obj ? 1 : obj &lt; e.obj ? -1 : 0;
+  }
+  inline Object getKey() {
+    return obj;
+  }
+  static SimpleSortableObject nullObject;
+  inline int isNull() {
+    // cout &lt;&lt; &quot;investigating if &quot; &lt;&lt; obj &lt;&lt; &quot; is null&quot; &lt;&lt; endl;
+    return obj == (Object)0;
+  }
+};
+
+template &lt;class Element, class Key&gt; 
+class SortedPointerTable {
+protected:
+  Element **table;
+  SizeType size; // # of elements in the table
+  SizeType allocatedSize; // # of affordable elements in the table
+#ifdef CACHE
+  Key      last;
+  SizeType cache;
+#endif
+public:
+  SortedPointerTable(Element **p, SizeType s) {
+    if (!p) return;
+    SizeType as;
+    for (as = 1 &lt;&lt; 7; as &lt;= s; as &lt;&lt;= 1)
+      ;
+    if (table) {
+      removeAll();
+      delete table;
+    }
+    table = (Element **)new char[sizeof(Element *) * as];
+    if (!table) return;
+    allocatedSize = as;
+    memcpy((void *)table, (void *)p, sizeof(Element *) * s);
+    size = s;
+    sortElements();
+#ifdef CACHE
+    cache = -1;
+#endif
+  }
+
+  SortedPointerTable(SortedPointerTable &amp;st) {
+    if (st.table == 0) 
+      return;
+    SizeType as;
+    for (as = 1 &lt;&lt; 7; as &lt;= st.size; as &lt;&lt;= 1)
+      ;
+    table = (Element **)new char[sizeof(Element *) * as];
+    if (!table) return;
+    allocatedSize = as;
+    if (st.size &gt; 0) {
+      memcpy((void *)table, (void *)table, sizeof(Element *) * st.size);
+    }
+    size = st.size;
+    sortElements();
+#ifdef CACHE
+    cache = -1;
+#endif
+  }
+
+  SortedPointerTable(SizeType s = 1 &lt;&lt; 7) {
+    SizeType as;
+    for (as = 1 &lt;&lt; 7; as &lt;= s; as &lt;&lt;= 1) 
+      ;
+    table = (Element **)new char[sizeof(Element *) * as];
+    if (!table) return;
+    allocatedSize = as;
+    size = 0;
+#ifdef CACHE
+    cache = -1;
+#endif
+  }
+
+  ~SortedPointerTable() {
+    if (table) 
+      delete (char *)table;
+  }
+
+  inline SizeType getSize() {
+    if (table) 
+      return size; 
+    else 
+      return 0;
+  }
+
+  inline SizeType getCapacity() {
+    if (table)
+      return allocatedSize;
+    else
+      return 0;
+  }
+
+  Element *findElement(Key key) {
+    return (*this)[key];
+  }
+
+  inline Element *operator[](Key key) {
+#ifdef CACHE
+    if (cache &gt;= 0 &amp;&amp; key == last)
+      return table[cache];
+#endif
+    SizeType index = searchByKey(key);
+    if (index &lt; size) {
+      if (table[index]-&gt;compare(key) == 0) {
+#ifdef CACHE
+        last = key;
+        cache = index;
+#endif
+        return table[index];
+      } else {
+        return 0;
+      }
+    } else {
+      return 0;
+    }
+  }
+
+  SizeType searchByKey(Key key) {
+    if (size == 0)
+      return 0;
+    SizeType bottom = 0;
+    SizeType top = size - 1;
+    SizeType middle;
+    int cmp;
+    while (bottom &lt; top) {
+      middle = (bottom + top) / 2;
+      cmp = table[middle]-&gt;compare(key);
+      if (cmp &lt; 0)
+        bottom = middle + 1;
+      else
+        top = middle;
+    }  
+    // bottom == top
+    cmp = table[bottom]-&gt;compare(key);
+    if (cmp &lt; 0)
+      bottom++;
+
+    // printStatus(key, bottom);
+    return bottom;
+  }
+
+  SizeType searchByElement(Element *e) {
+    if (size == 0)
+      return 0;
+    if (e == 0)
+      return 0;
+    SizeType bottom = 0;
+    SizeType top = size - 1;
+    SizeType middle;
+    int cmp = 0;
+    while (bottom &lt; top) {
+      middle = (bottom + top) / 2;
+      cmp = table[middle]-&gt;compare(*e);
+      if (cmp &lt; 0)
+        bottom = middle + 1;
+      else
+        top = middle;
+    }  
+    // bottom == top
+    cmp = table[bottom]-&gt;compare(*e);
+    if (cmp &lt; 0)
+      bottom++;
+
+    return bottom;
+  }
+
+  inline Element *pickupElement(SizeType index) {
+    return (*this)(index);
+  }
+
+  inline Element *operator()(SizeType index) {
+    return (0 &lt;= index &amp;&amp; index &lt; size) ? table[index] : 0;
+  }
+
+  Element *insertElement(Element *e) {
+    return *this += e;
+  }
+
+  Element *operator+=(Element *e) {
+    if (!e) return 0; // cannot insert null element
+#ifdef CACHE
+    cache = -1;
+#endif
+    SizeType index = searchByElement(e);
+    if (index &lt; size) {
+      if (table[index]-&gt;compare(*e) &lt;= 0)
+        return 0; // elements must be unique or something is wrong
+    }
+    if(insertSpace(index) &gt;= allocatedSize) 
+      return 0;  // out of memory or something is wrong
+    return table[index] = e;
+  }
+  
+  inline Element *removeElement(Key key) {
+    return *this -= key;
+  }
+    
+  Element *operator-=(Key key) {
+    SizeType index = searchByKey(key);
+    if (index &lt; size) {
+      if (table[index]-&gt;compare(key) != 0) 
+        return 0; // no elements with such key
+#ifdef CACHE
+      cache = -1;
+#endif
+      // find the element with the key
+      Element *e = table[index];
+      if (removeSpace(index) &gt;= allocatedSize)
+        return 0; // something is wrong
+      return e; // removal is succesful
+    } else {
+      return 0; // Element e is bigger than the last
+    }
+  }
+
+  inline Element *removeElement(Element *e) {
+    return *this -= e;
+  }
+
+  Element *operator-=(Element *e) {
+    SizeType index = searchByElement(e);
+    if (index &lt; size) {
+      if (table[index]-&gt;compare(*e) != 0) 
+        return 0; // no elements with such key
+      // find the element with the key
+#ifdef CACHE
+      cache = -1;
+#endif
+      Element *e = table[index];
+      if (removeSpace(index) &gt;= allocatedSize)
+        return 0; // something is wrong
+      return e; // removal is succesful
+    } else {
+      return 0; // Element e is bigger than the last
+    }
+  }
+
+  SizeType removeAll() {
+#ifdef CACHE
+    cache = -1;
+#endif
+    SizeType index;
+    Element *e;
+    for (index = 0; index &lt; size; index++) {
+      e = table[index];
+      if (e != 0) {
+        delete e;
+      }
+    }
+    size = 0;
+    return index;
+  }
+           
+protected:
+  static int compare(const void *a, const void *b) {
+    return (*(Element **)a)-&gt;compare(**(Element **)b);
+  }
+
+  void sortElements() {
+    qsort((void *)table, size, sizeof(Element *), compare);
+  }    
+
+  void printStatus(Key key, SizeType bottom) {
+    SizeType i;
+    cout &lt;&lt; &quot;size = &quot; &lt;&lt; size &lt;&lt; endl;
+    for (i = 0; i &lt; size; i++) {
+      cout &lt;&lt; &quot;[&quot; &lt;&lt; i &lt;&lt; &quot;] = &quot; &lt;&lt; table[i]-&gt;getKey() &lt;&lt; endl;
+    }
+    cout &lt;&lt; &quot;searchByKey(&quot; &lt;&lt; key &lt;&lt; &quot;) = &quot; &lt;&lt; bottom &lt;&lt; endl;
+    cout &lt;&lt; endl;
+  }    
+
+  SizeType insertSpace(SizeType index) {
+    if (size &lt; index) 
+      return allocatedSize; // index is too high
+    if (!(size &lt; allocatedSize)) 
+      grow(); // if there is no space left grow it
+
+    if (!(size &lt; allocatedSize)) 
+      return allocatedSize; // unable to grow
+
+    if (index &lt; size) {
+      memmove(&amp;table[index + 1], &amp;table[index], 
+              sizeof(Element *) * (size - index + 1));
+    } 
+    size++;
+    return index;
+  }
+
+  SizeType removeSpace(SizeType index) {
+    if (size &lt; index) 
+      return allocatedSize;
+    if (index &lt; size - 1) {
+      memmove(&amp;table[index], &amp;table[index + 1], 
+              sizeof(Element *) * (size - index));
+    }
+    size--;
+    return index;
+  }
+
+  void grow() {
+    if (size &lt; allocatedSize / 2)
+      return;
+    SizeType newas = allocatedSize &lt;&lt; 1;
+    Element **newtable = 
+      (Element **)new char[sizeof(Element *) * newas];
+    if (newtable == 0)
+      return;
+    memcpy((void *)newtable, (void *)table, sizeof(Element *) * size);
+    delete (char *)table;
+    table = newtable;
+    allocatedSize = newas;
+  }
+};
+
+template &lt;class Element, class Key&gt; 
+class SortedObjectTable {
+protected:
+  Element *table;
+  SizeType size; // # of elements in the table
+  SizeType allocatedSize; // # of affordable elements in the table
+
+#ifdef CACHE
+  Key      last;
+  SizeType cache;
+#endif
+public:
+  SortedObjectTable(Element *p, SizeType s) {
+    if (!p) return;
+    SizeType as;
+    for (as = 1 &lt;&lt; 7; as &lt;= s; as &lt;&lt;= 1)
+      ;
+    if (table) {
+      removeAll();
+      delete table;
+    }
+    table = (Element *)new char[sizeof(Element) * as];
+    if (!table) return;
+    allocatedSize = as;
+    memcpy((void *)table, (void *)p, sizeof(Element) * s);
+    size = s;
+    sortElements();
+#ifdef CACHE
+    cache = -1;
+#endif
+  }
+
+  SortedObjectTable(SortedObjectTable &amp;st) {
+    if (st.table == 0) 
+      return;
+    SizeType as;
+    for (as = 1 &lt;&lt; 7; as &lt;= st.size; as &lt;&lt;= 1)
+      ;
+    table = (Element *)new char[sizeof(Element) * as];
+    if (!table) return;
+    allocatedSize = as;
+    if (st.size &gt; 0) {
+      memcpy((void *)table, (void *)table, sizeof(Element) * st.size);
+    }
+    size = st.size;
+    sortElements();
+#ifdef CACHE
+    cache = -1;
+#endif
+  }
+
+  SortedObjectTable(SizeType s = 1 &lt;&lt; 7) {
+    SizeType as;
+    for (as = 1 &lt;&lt; 7; as &lt;= s; as &lt;&lt;= 1) 
+      ;
+    table = (Element *)new char[sizeof(Element) * as];
+    if (!table) return;
+    allocatedSize = as;
+    size = 0;
+#ifdef CACHE
+    cache = -1;
+#endif
+  }
+
+  ~SortedObjectTable() {
+    if (table) 
+      delete (char *)table;
+  }
+
+  inline SizeType getSize() {
+    if (table) 
+      return size; 
+    else 
+      return 0;
+  }
+
+  inline SizeType getCapacity() {
+    if (table)
+      return allocatedSize;
+    else
+      return 0;
+  }
+
+  inline Element *getTable() {
+    return table;
+  }
+
+  Element &amp;findElement(Key key) {
+    return (*this)[key];
+  }
+
+  inline Element &amp;operator[](Key key) {
+#ifdef CACHE
+    if (cache &gt;= 0 &amp;&amp; key == last)
+      return table[cache];
+#endif
+    SizeType index = searchByKey(key);
+    if (index &lt; size) {
+      if (table[index].compare(key) == 0) {
+#ifdef CACHE
+        last = key;
+        cache = index;
+#endif
+        return table[index];
+      } else {
+        return Element::nullObject;
+      }
+    } else {
+      return Element::nullObject;
+    }
+  }
+
+  SizeType searchByKey(Key key) {
+    if (size == 0)
+      return 0;
+    SizeType bottom = 0;
+    SizeType top = size - 1;
+    SizeType middle;
+    int cmp;
+    while (bottom &lt; top) {
+      middle = (bottom + top) / 2;
+      cmp = table[middle].compare(key);
+      if (cmp &lt; 0)
+        bottom = middle + 1;
+      else
+        top = middle;
+    }  
+    // bottom == top
+    cmp = table[bottom].compare(key);
+    if (cmp &lt; 0)
+      bottom++;
+
+    // printStatus(key, bottom);
+    return bottom;
+  }
+
+  inline Element &amp;pickupElement(SizeType index) {
+    if (index &gt;= size)
+      return Element::nullObject; // index is out of range
+    return table[index];
+  }
+
+  Element &amp;operator()(SizeType index) {
+    if (index &gt;= size)
+      return Element::nullObject; // index is out of range
+    return table[index];
+  }
+
+  Element &amp;insertElement(Element e) {
+    return *this += e;
+  }
+
+  inline Element &amp;operator+=(Element e) {
+    if (e.isNull()) 
+      return Element::nullObject; // cannot insert null element
+    Key key = e.getKey();
+    SizeType index = searchByKey(key);
+    if (index &lt; size) {
+      if (table[index].compare(key) &lt;= 0)
+        return Element::nullObject; 
+      // elements must be unique or something is wrong
+    }
+#ifdef CACHE
+    cache = -1;
+#endif
+    if(insertSpace(index) &gt;= allocatedSize) 
+      return Element::nullObject;  // out of memory or something is wrong
+    return table[index] = e;
+  }
+  
+  Element removeElement(Key key) {
+    return *this -= key;
+  }
+    
+  inline Element operator-=(Key key) {
+    SizeType index = searchByKey(key);
+    if (index &lt; size) {
+      if (table[index].compare(key) != 0) 
+        return Element::nullObject; // no elements with such key
+      // find the element with the key
+      Element e = table[index];
+      if (removeSpace(index) &gt;= allocatedSize)
+        return Element::nullObject; // something is wrong
+#ifdef CACHE
+      cache = -1;
+#endif
+      return e; // removal is succesful
+    } else {
+      return Element::nullObject; // Element e is bigger than the last
+    }
+  }
+
+  SizeType removeAll() {
+    SizeType i;
+#ifdef CACHE
+    cache = -1;
+#endif
+    for (i = 0; i &lt; size; i++) {
+      table[i].~Element();
+    }
+    size = 0;
+    return i;
+  }
+
+protected:
+  static int compare(const void *a, const void *b) {
+    return ((Element *)a)-&gt;compare(*(Element *)b);
+  }
+
+  void sortElements() {
+    qsort((void *)table, size, sizeof(Element), compare);
+  }    
+
+  void printStatus(Key key, SizeType bottom) {
+    SizeType i;
+    cout &lt;&lt; &quot;size = &quot; &lt;&lt; size &lt;&lt; endl;
+    for (i = 0; i &lt; size; i++) {
+      cout &lt;&lt; &quot;[&quot; &lt;&lt; i &lt;&lt; &quot;] = &quot; &lt;&lt; table[i].getKey() &lt;&lt; endl;
+    }
+    cout &lt;&lt; &quot;searchByKey(&quot; &lt;&lt; key &lt;&lt; &quot;) = &quot; &lt;&lt; bottom &lt;&lt; endl;
+    cout &lt;&lt; endl;
+  }    
+
+  SizeType insertSpace(SizeType index) {
+    if (size &lt; index) 
+      return allocatedSize; // index is too high
+    if (!(size &lt; allocatedSize)) 
+      grow(); // if there is no space left grow it
+
+    if (!(size &lt; allocatedSize)) 
+      return allocatedSize; // unable to grow
+
+    if (index &lt; size) {
+      memmove(&amp;table[index + 1], &amp;table[index], 
+              sizeof(Element) * (size - index + 1));
+    } 
+    size++;
+    return index;
+  }
+
+  SizeType removeSpace(SizeType index) {
+    if (size &lt; index) 
+      return allocatedSize;
+    if (index &lt; size - 1) {
+      memmove(&amp;table[index], &amp;table[index + 1], 
+              sizeof(Element) * (size - index));
+    }
+    size--;
+    return index;
+  }
+
+  void grow() {
+    if (size &lt; allocatedSize / 2)
+      return;
+    SizeType newas = allocatedSize &lt;&lt; 1;
+    Element *newtable = 
+      (Element *)new char[sizeof(Element) * newas];
+    if (newtable == 0)
+      return;
+    memcpy((void *)newtable, (void *)table, sizeof(Element) * size);
+    delete (char *)table;
+    table = newtable;
+    allocatedSize = newas;
+  }
+};
+#endif // __SortedTable_H
+</PRE>
+
+<P>
+<BR><HR>
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

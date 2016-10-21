@@ -1,0 +1,79 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Window Overlapping</TITLE>
+<META NAME="description" CONTENT="Window Overlapping">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="previous" HREF="node38.html">
+<LINK REL="up" HREF="node36.html">
+<LINK REL="next" HREF="node40.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html767"
+ HREF="node40.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html763"
+ HREF="node36.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html759"
+ HREF="node38.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html765"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html766"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html768"
+ HREF="node40.html">Primitive Operations</A>
+<B> Up:</B> <A NAME="tex2html764"
+ HREF="node36.html">New Factors in Persistence</A>
+<B> Previous:</B> <A NAME="tex2html760"
+ HREF="node38.html">Mapping and Unmapping</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H2><A NAME="SECTION00553000000000000000">
+Window Overlapping</A>
+</H2>
+<A NAME="210">&#160;</A>
+<P>
+In the design of the persistent storage, a mapped region in main memory
+can suitably be called a <B>window</B>.  Windows are exclusively used for
+referencing all the objects in the persistent storage.  The analogy of
+a bookshelf and a desk (See Section <A HREF="node21.html#analogy">2.1</A>) still provides a
+reasonable depiction of the persistent storage.  However, the behavior of
+mapped windows has some peculiarities as compared with file binders in
+the analogy.
+<P>
+One of the peculiarities comes from synchronization, which has already
+been discussed above.  The essence is the fact that digital objects are 
+cloneable without modifying the original objects.
+<P>
+Another comes from window overlapping.  Window overlapping is an
+inevitable consequence of dynamic allocation and reference of persistent
+objects.  As overlapped pages of windows are mapped in the same physical
+memory (See Section <A HREF="node27.html#mmapsystemcall">2.3.3</A>), any modification in one of the 
+pages is instantly mirrored to all the other pages.
+<P>
+This quality together with unallocated regions of windows sometimes 
+results in redundant windows which are removable without any loss of
+information in main memory.
+<P>
+<BR><HR>
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

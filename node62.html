@@ -1,0 +1,181 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>PersistentStorage Class</TITLE>
+<META NAME="description" CONTENT="PersistentStorage Class">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node63.html">
+<LINK REL="previous" HREF="node59.html">
+<LINK REL="up" HREF="node58.html">
+<LINK REL="next" HREF="node63.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html1107"
+ HREF="node63.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1103"
+ HREF="node58.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1097"
+ HREF="node61.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1105"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1106"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1108"
+ HREF="node63.html">PersistentPointer Class</A>
+<B> Up:</B> <A NAME="tex2html1104"
+ HREF="node58.html">Persistent Storage Classes</A>
+<B> Previous:</B> <A NAME="tex2html1098"
+ HREF="node61.html">Object Mapping</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H2><A NAME="SECTION00632000000000000000">
+<TT>PersistentStorage</TT> Class</A>
+</H2>
+<A NAME="persistentstoragedesc">&#160;</A><A NAME="542">&#160;</A>
+<P>
+<BR>
+<DIV ALIGN="CENTER"><A NAME="persistentstorage">&#160;</A><A NAME="1393">&#160;</A>
+<TABLE>
+<CAPTION><STRONG>Figure 3.9:</STRONG>
+<TT>PersistentStorage</TT> <I>Class</I></CAPTION>
+<TR><TD><IMG WIDTH="739" HEIGHT="380"
+ SRC="img12.gif"
+ ALT="\begin{figure}
+\begin{center}
+
+\includegraphics [scale=1]{PersistentStorage.ps}
+\end{center}\end{figure}"></TD></TR>
+</TABLE>
+</DIV>
+<BR>
+<P>
+The <TT>PersisentStorage</TT> class (See Figure <A HREF="node62.html#persistentstorage">3.9</A>)
+is the control tower of the persistent storage classes.  The most 
+significant characteristic of the class is that the instance must be
+unique in the process.  Only one instance can be instantiated in the 
+process.
+<P>
+The class has four important member variables - <TT>arenaTable</TT>,
+<TT>entryTable</TT>, <TT>baseDir</TT>, and <TT>totalWindowSize</TT>.  The 
+<TT>arenaTable</TT> is the table of the current <TT>Arena</TT> objects.
+The <TT>entryTable</TT> is the table of the <TT>Entry</TT> objects.  The
+<TT>baseDir</TT> is the directory name for the <TT>Arena</TT> storage files.
+The <TT>totalWindowSize</TT> is the current size of mapped <TT>Window</TT>s
+in total.
+<P>
+The constructor takes the <TT>baseDir</TT> as the only parameter.  It
+initializes the <TT>arenaTable</TT> and the <TT>entryTable</TT> by probing
+the entries of the base directory.  If there are already some 
+<TT>Arena</TT> storage files, it instantiates the <TT>Arena</TT> objects
+for the storage files.  If there is the file for the entry points
+in the base directory, it opens the file and initializes the 
+<TT>entryTable</TT> by the contents.
+<P>
+The destructor synchronizes all the <TT>Arena</TT>s and destructs them.
+The <TT>Arena</TT>s synchronize all the <TT>Window</TT>s in turn.  The
+destructor stores the current contents of the <TT>entryTable</TT>
+in the entry point file.
+<P>
+The file name of each <TT>Arena</TT> storage file has the fixed format
+<TT>Arena00000001.psa</TT>, where the hexadecimal number indicates its
+<TT>arenaID</TT> and the extension <TT>.psa</TT> represents the initials of
+`Persistent Storage Arena.'  More detailed discussions on the <TT>arenaID</TT>
+appear in the Section <A HREF="node64.html#arenadesc">3.3.4</A>.  On the other hand, the file
+for the entry points is named <TT>EntryPoint.psa</TT>.
+<P>
+The operation <TT>allocate(size)</TT> requests a storage block bigger
+than the <TT>size</TT> bytes in the appropriate <TT>Arena</TT>.  When there
+are no <TT>Arena</TT>s for the storage block, it creates an <TT>Arena</TT>.
+When there are no free blocks in the appropriate <TT>Arena</TT>, the
+operation makes the <TT>Arena</TT> <TT>grow</TT> for a new free block.
+If the allocation of the storage block succeeds, it returns the 
+<TT>PersistentPointer</TT> object that points the block.
+<P>
+The operation <TT>destroy(persistentPointer)</TT> restores the allocated
+block pointed by the <TT>persistentPointer</TT> to the free blocks in
+the <TT>Arena</TT>.  The <TT>persistentPointer</TT> object must be grabbing
+the object when the operation is invoked.
+<P>
+The operation <TT>synchronize()</TT> synchronizes all the mapping with
+the storage files.  It takes long time to complete all the synchronization
+operations.
+<P>
+The operations <TT>getEntryPoint()</TT> and <TT>setEntryPoint()</TT> are the
+accessors for the <TT>entryTable</TT>.  The need for the mechanism of entry 
+points comes from the life cycles of persistent pointers, which
+are longer than a process.  In a normal case, the process manipulates
+the persistent storage and constructs some graphs in it.  If the process
+should terminate without registering the clues to the graphs in the 
+<TT>entryTable</TT>, other processes, which are usually the same program,
+could not find any clues to the stored graphs in the persistent storage.
+<P>
+An entry point is a pair of a <TT>PersistentPointer</TT> and an integer
+<TT>EntryID</TT>.  If the <TT>EntryID</TT> is assigned properly, it can serve
+as the clue to the paired <TT>PersistentPointer</TT> object. (See Section
+<A HREF="node79.html#entrydesc">3.3.10</A>)
+<P>
+The operations <TT>grab()</TT>, <TT>release()</TT>, <TT>grabReadOnly()</TT>.
+and <TT>releaseReadOnly()</TT> are not public ones, but they are invoked
+by the corresponding operations in the <TT>PersistentPointer</TT> class.
+In other words, these operations are redirected from the 
+<TT>PersistentPointer</TT>.  This mechanism is achieved by the static
+operation <TT>getThePS()</TT>, which returns the pointer to the unique
+instance of the <TT>PersistentStorage</TT>.  The global variable <TT>ps</TT>
+is initialized by the constructor for pointing the unique instance. 
+These operations are also redirected to the appropriate <TT>Arena</TT>
+objects.
+<P>
+The remaining two operations - <TT>notifyMapping()</TT> and 
+<TT>notifyUnmapping()</TT> are also not public.  Whenever the <TT>Window</TT> 
+object is instantiated and destructed, they are invoked for calculating 
+the total size of the mapped <TT>Window</TT>s in the main memory.  The 
+size is used by the private operation <TT>cleanUp()</TT> to decide 
+whether to clean up the removable <TT>Window</TT>s for reducing the
+usage of the main memory.
+<P><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1107"
+ HREF="node63.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1103"
+ HREF="node58.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1097"
+ HREF="node61.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1105"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1106"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1108"
+ HREF="node63.html">PersistentPointer Class</A>
+<B> Up:</B> <A NAME="tex2html1104"
+ HREF="node58.html">Persistent Storage Classes</A>
+<B> Previous:</B> <A NAME="tex2html1098"
+ HREF="node61.html">Object Mapping</A>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

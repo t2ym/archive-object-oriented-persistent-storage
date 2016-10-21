@@ -1,0 +1,555 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Main.cc</TITLE>
+<META NAME="description" CONTENT="Main.cc">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node106.html">
+<LINK REL="previous" HREF="node104.html">
+<LINK REL="up" HREF="node99.html">
+<LINK REL="next" HREF="node106.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html1639"
+ HREF="node106.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1635"
+ HREF="node99.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1629"
+ HREF="node104.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1637"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1638"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1640"
+ HREF="node106.html">Makefile</A>
+<B> Up:</B> <A NAME="tex2html1636"
+ HREF="node99.html">The Sources</A>
+<B> Previous:</B> <A NAME="tex2html1630"
+ HREF="node104.html">FileStat.h</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H1><A NAME="SECTION001160000000000000000">
+<TT>Main.cc</TT></A>
+</H1>
+<A NAME="maincc">&#160;</A>
+<PRE>
+// Main.cc
+// Copyright (C) 1997, 98 Mori Tetsuya
+// 12/23/97
+// 1/20/98 SortableFixedString, SimpleTree
+
+#include &quot;PersistentStorage.h&quot;
+#include &lt;iostream.h&gt;
+#include &lt;fstream.h&gt;
+#include &lt;new.h&gt;
+#include &lt;Regex.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;time.h&gt;
+
+#define RAND(m) (rand() / (RAND_MAX / m))
+
+//#define SILENT 1
+
+// pseudo main()
+
+#define STRSIZE 256
+
+enum OID { OID_SampleObject, OID_SimpleTree };
+
+class SampleObject: public PersistentObject {
+  PersistentPointer next;
+  char str[10];
+public:
+  SampleObject(PersistentPointer &amp;p, 
+               const char *s = 0) : 
+    PersistentObject(OID_SampleObject), next(p) {
+    if (s != 0) {
+      strcpy(str, s);
+    } else {
+      strcpy(str, &quot;abc&quot;);
+    }
+  }
+  PersistentPointer &amp;Next() {
+    return next;
+  }
+  char *Str() {
+    return str;
+  }
+};
+
+template&lt;int size&gt;
+class SortableFixedString {
+protected:
+  char     str[size];
+public:
+  SortableFixedString(char *s = 0) {
+    if (s == 0) {
+      str[0] = '\0';
+    } else {
+      strncpy(str, s, size);
+      str[size - 1] = '\0';
+    }
+  }
+  ~SortableFixedString() {}
+  inline char *getValue() { return str; }
+  inline ComparisonType compare(char *s) {
+    return s != 0 ? strcmp(str, s) : GreaterThan;
+  }
+  inline ComparisonType compare(SortableFixedString &amp;s) {
+    return strcmp(str, s.str);
+  }
+  inline SortableFixedString &amp;operator = (char *s) {
+    if (s == 0) {
+      str[0] = '\0';
+    } else {
+      strncpy(str, s, size);
+      str[size - 1] = '\0';
+    }
+    return *this;
+  }
+};
+
+template&lt;int size&gt;
+ostream &amp;operator&lt;&lt;(ostream &amp;os, SortableFixedString&lt;size&gt; &amp;obj) {
+  return os &lt;&lt; obj.getValue();
+}
+
+const EntryID SimpleTreeTopEID = 1;
+
+class SimpleTree;
+
+ostream &amp;operator&lt;&lt;(ostream &amp;os, SimpleTree &amp;obj);
+
+template &lt;class Element, class Value, ObjectID oid&gt;
+class SimpleTree : public PersistentObject {
+  friend ostream &amp;operator&lt;&lt;(ostream &amp;os, SimpleTree &amp;obj);
+protected:
+  PersistentPointer left;
+  PersistentPointer right;
+  Element           object;
+public:
+  SimpleTree(Value value, 
+             PersistentPointer l = PersistentPointer(),
+             PersistentPointer r = PersistentPointer()) : 
+    PersistentObject(oid), 
+    left(l), right(r), object(value) {
+  }
+  ~SimpleTree() {}
+  inline PersistentPointer &amp;Left() { return left; }
+  inline PersistentPointer &amp;Right() { return right; }
+  inline Value getValue() { return object.getValue(); }
+  PersistentPointer insert(Value v, PersistentPointer This) {
+    ComparisonType cmp = object.compare(v);
+    if (cmp == 0) {
+      return This;
+    } else if (cmp &lt; 0) {
+      if (Right() == 0) {
+        PointerPair pp = ps-&gt;allocate(sizeof(*this));
+        pp.grab();
+        if (P(pp) == 0)
+          return PersistentPointer();
+        new(pp) SimpleTree(v);
+        pp.release();
+        Right() = pp;
+        return pp;
+      } else {
+        PointerPair pp = Right();
+        pp.grabReadOnly();
+        PersistentPointer p;
+        if (P(pp) != 0 &amp;&amp; P(pp)-&gt;getID() == oid)
+          p = ((SimpleTree *)P(pp))-&gt;insert(v, Right());
+        pp.releaseReadOnly();
+        return p;
+      }
+    } else {
+      if (Left() == 0) {
+        PointerPair pp = ps-&gt;allocate(sizeof(*this));
+        pp.grab();
+        if (P(pp) == 0)
+          return PersistentPointer();
+        new(pp) SimpleTree(v);
+        pp.release();
+        Left() = pp;
+        return pp;
+      } else {
+        PointerPair pp = Left();
+        pp.grabReadOnly();
+        PersistentPointer p;
+        if (P(pp) != 0 &amp;&amp; P(pp)-&gt;getID() == oid)
+          p = ((SimpleTree *)P(pp))-&gt;insert(v, Left());
+        pp.releaseReadOnly();
+        return p;
+      }
+    }
+  }
+
+  PersistentPointer search(Value v, PersistentPointer This) {
+    ComparisonType cmp = object.compare(v);
+    if (cmp == 0) {
+      return This;
+    } else if (cmp &lt; 0) {
+      if (Right() == 0) {
+        return PersistentPointer();
+      } else {
+        PointerPair pp = Right();
+        pp.grabReadOnly();
+        PersistentPointer p;
+        if (P(pp) != 0 &amp;&amp; P(pp)-&gt;getID() == oid)
+          p = ((SimpleTree *)P(pp))-&gt;search(v, Right());
+        pp.releaseReadOnly();
+        return p;
+      }
+    } else {
+      if (Left() == 0) {
+        return PersistentPointer();
+      } else {
+        PointerPair pp = Left();
+        pp.grabReadOnly();
+        PersistentPointer p;
+        if (P(pp) != 0 &amp;&amp; P(pp)-&gt;getID() == oid)
+          p = ((SimpleTree *)P(pp))-&gt;search(v, Left());
+        pp.releaseReadOnly();
+        return p;
+      }
+    }
+  }
+
+  PersistentPointer match(Value lower, Value upper) {
+    PointerPair pp = ps-&gt;allocate(sizeof(*this));
+    pp.grab();
+    new (pp) SimpleTree(&quot;&quot;);
+    doMatch(lower, upper, pp);
+    pp.release();
+    return pp;
+  }
+
+  PointerPair &amp;doMatch(Value lower, Value upper, 
+                       PointerPair &amp;top) {
+    ComparisonType cmpLower = object.compare(lower);
+    ComparisonType cmpUpper = object.compare(upper);
+    ComparisonType cmp;
+    if (cmpLower &lt; 0) {
+      cmp = LessThan;
+    } else if (cmpUpper &gt; 0) {
+      cmp = GreaterThan;
+    } else {
+      cmp = EqualTo;
+    }
+    if (cmp == 0) {
+      ((SimpleTree *)P(top))-&gt;insert(object.getValue(), top);
+    }
+    if (cmp &gt;= 0 &amp;&amp; Left() != 0) {
+      PointerPair L = Left();
+      L.grabReadOnly();
+      if (P(L) != 0 &amp;&amp; ((SimpleTree *)P(L))-&gt;getID() == oid) 
+        ((SimpleTree *)P(L))-&gt;doMatch(lower, upper, top);
+      L.releaseReadOnly();
+    }
+    if (cmp &lt;= 0 &amp;&amp; Right() != 0) {
+      PointerPair R = Right();
+      R.grabReadOnly();
+      if (P(R) != 0 &amp;&amp; ((SimpleTree *)P(R))-&gt;getID() == oid) 
+        ((SimpleTree *)P(R))-&gt;doMatch(lower, upper, top);
+      R.releaseReadOnly();
+    }
+    return top;
+  }
+
+  void traverse(ostream &amp;os) {
+    if (Left() != 0) {
+      PointerPair pp = Left();
+      pp.grabReadOnly();
+      if (P(pp) != 0 &amp;&amp; P(pp)-&gt;getID() == oid)
+        ((SimpleTree *)P(pp))-&gt;traverse(os);
+      pp.releaseReadOnly();
+    }
+#ifndef SILENT
+    os &lt;&lt; object &lt;&lt; endl;
+#endif
+    if (Right() != 0) {
+      PointerPair pp = Right();
+      pp.grabReadOnly();
+      if (P(pp) != 0 &amp;&amp; P(pp)-&gt;getID() == oid)
+        ((SimpleTree *)P(pp))-&gt;traverse(os);
+      pp.releaseReadOnly();
+    }
+  }
+
+  inline isLeaf() { return Left() == 0 &amp;&amp; Right() == 0; }
+
+  BoolType destroy() {
+#ifndef SILENT
+    cout &lt;&lt; &quot;destroy &quot; &lt;&lt; object &lt;&lt; endl;
+#endif
+    BoolType successR;
+    BoolType successL;
+    if (Left() != 0) {
+      PointerPair L = Left();
+      L.grab();
+      if (P(L) != 0 &amp;&amp; P(L)-&gt;getID() == oid) {
+        successL = ((SimpleTree *)P(L))-&gt;destroy();
+        if (successL &amp;&amp; ((SimpleTree *)P(L))-&gt;isLeaf()) {
+          successL = ps-&gt;destroy(L);
+          if (!successL)
+            successL = False;
+          else 
+            Left() = 0;
+        } else {
+          successL = False;
+        }
+        if (!successL)
+          successL = L.release();
+      } else {
+        successL = False;
+      }
+    } else {
+      successL = True;
+    }
+    if (Right() != 0) {
+      PointerPair R = Right();
+      R.grab();
+      if (P(R) != 0 &amp;&amp; P(R)-&gt;getID() == oid) {
+        successR = ((SimpleTree *)P(R))-&gt;destroy();
+        if (successR &amp;&amp; ((SimpleTree *)P(R))-&gt;isLeaf()) {
+          successR = ps-&gt;destroy(R);
+          if (!successR)
+            successR = False;
+          else 
+            Right() = 0;
+        } else {
+          successR = False;
+        }
+        if (!successR)
+          successR = R.release();
+      } else {
+        successR = False;
+      }
+    } else {
+      successR = True;
+    }
+    return successR &amp;&amp; successL;
+  }
+}; // SimpleTree
+
+typedef SimpleTree&lt;SortableFixedString&lt;STRSIZE&gt;, char *, OID_SimpleTree&gt; ST;
+typedef ST *PST;
+
+int main(int argc, char *argv[]) {
+  new PersistentStorage(&quot;.&quot;);
+  char line[STRSIZE];
+  char *lower, *upper;
+  BoolType verbose = True;
+
+  ifstream fin;
+  istream *is;
+  if (argc &gt;= 4) {
+    fin.open(argv[1]);
+    lower = argv[2];
+    upper = argv[3];
+    is = &amp;fin;
+  } else if (argc == 3) {
+    verbose = False;
+    lower = argv[1];
+    upper = argv[2];
+    is = &amp;cin;
+  } else {
+    cout &lt;&lt; &quot;Usage &quot; &lt;&lt; argv[0] &lt;&lt; &quot; [file] lower upper&quot; &lt;&lt; endl;
+    exit(1);
+  }
+
+  PointerPair pp = ps-&gt;getEntryPoint(SimpleTreeTopEID);
+  if (pp == 0) {
+    pp = ps-&gt;allocate(sizeof(ST));
+    new(pp.grab()) ST(&quot;&quot;);
+    ps-&gt;setEntryPoint(SimpleTreeTopEID, pp);
+  } else {
+    pp.grab();
+  }
+
+  if (P(pp)-&gt;getID() != OID_SimpleTree) {
+    cout &lt;&lt; &quot;ObjectID is not OID_SimpleTree&quot; &lt;&lt; endl;
+    exit(1);
+  }
+
+  do {
+    is-&gt;getline(line, STRSIZE);
+    PST(P(pp))-&gt;insert(line, pp);
+#ifndef SILENT
+    if (verbose)
+      cout &lt;&lt; &quot;inserting &quot; &lt;&lt; line &lt;&lt; endl;
+#endif
+  } while (is-&gt;gcount() &gt; 0);
+
+  if (verbose) {
+    fin.close();
+    fin.open(argv[1]);
+    is = &amp;fin;
+    PointerPair p;
+    do {
+      is-&gt;getline(line, STRSIZE);
+      p = PST(P(pp))-&gt;search(line, pp);
+#ifndef SILENT
+      if (p != 0) {
+        p.grabReadOnly();
+        if (P(p) != 0 &amp;&amp; P(p)-&gt;getID() == OID_SimpleTree) {
+          cout &lt;&lt; &quot;found     &quot; &lt;&lt; PST(P(p))-&gt;getValue() &lt;&lt; endl;
+        }
+        p.releaseReadOnly();
+      } else {
+        cout &lt;&lt; &quot;not found &quot; &lt;&lt; line &lt;&lt; endl;
+      }
+#endif
+    } while (is-&gt;gcount() &gt; 0);
+  }  
+  
+  if (verbose) 
+    PST(P(pp))-&gt;traverse(cout);
+
+  if (argc &gt;= 3) {
+    PointerPair matched;
+    matched = PST(P(pp))-&gt;match(lower, upper);
+
+    matched.grab();
+    if (P(matched) != 0 &amp;&amp; P(matched)-&gt;getID() == OID_SimpleTree) {
+      cout &lt;&lt; &quot;#matched&quot; &lt;&lt; endl;
+      PST(P(matched))-&gt;traverse(cout);
+      cout &lt;&lt; &quot;#end matched&quot; &lt;&lt; endl;
+      PST(P(matched))-&gt;destroy();
+    }
+    if (matched.isGrabbed() != 0)
+      ps-&gt;destroy(matched);
+  }
+
+  pp.release();
+
+#if 0
+  PointerPair p;
+  PersistentPointer plast;
+  PersistentPointer pnext;
+  SizeType index;
+  SizeType s;
+
+  for (index = 0; index &lt; 100000; index++) {
+    plast = p;
+
+    p = ps-&gt;allocate(s = sizeof(SampleObject) + RAND(1024) +
+                      (RAND(100) == 0) * RAND(10000));
+    if (p.isNull()) {
+      cout &lt;&lt; &quot;\nallocate failed &quot; &lt;&lt; index &lt;&lt; &quot; &quot; &lt;&lt; s &lt;&lt; endl; 
+      break;
+    }
+    if (p.grab() != 0) {
+      new(p) SampleObject(plast);
+    } else {
+      cout &lt;&lt; &quot;\ngrab failed &quot; &lt;&lt; index &lt;&lt; &quot; &quot; &lt;&lt; s &lt;&lt; endl;
+      break;
+    }
+    memset(((SampleObject *)P(p))-&gt;Str(), (index % (127 - 32)) + 32, 10);
+    (((SampleObject *)P(p))-&gt;Str())[9] = '\0';
+    if (!p.release()) {
+      cout &lt;&lt; &quot;release failed&quot; &lt;&lt; endl;
+      break;
+    }
+#ifndef SILENT
+    cout &lt;&lt; index &lt;&lt; &quot;\r&quot; &lt;&lt; flush;
+#endif
+  }
+#ifndef SILENT
+  cout &lt;&lt; &quot;\nallocation &quot; &lt;&lt; index &lt;&lt; endl;
+#endif
+  plast = p;
+  index = 0;
+  while (!p.isNull()) {
+    p.grabReadOnly();
+#ifndef SILENT
+    cout &lt;&lt; index &lt;&lt; &quot;\r&quot; &lt;&lt; flush;
+#endif
+    if (P(p) == 0)
+      break;
+    pnext = ((SampleObject *)P(p))-&gt;Next();
+    p.releaseReadOnly();
+    p = pnext;
+    index++;
+  }
+#ifndef SILENT
+  cout &lt;&lt; &quot;\ngrabReadOnly &quot; &lt;&lt; index &lt;&lt; endl;
+#endif
+
+  srand(time(0));
+
+  p = plast;
+  index = 0;
+  while (!p.isNull()) {
+    p.grab();
+    if (P(p) == 0) {
+#ifndef SILENT
+      cout &lt;&lt; &quot;\ngrab failed&quot; &lt;&lt; index &lt;&lt; endl;
+#endif
+      break;
+    }
+    pnext = ((SampleObject *)P(p))-&gt;Next();
+    if (RAND(10) == 0) {
+      if (ps-&gt;destroy(p)) {
+#ifndef SILENT
+        cout &lt;&lt; &quot;d&quot; &lt;&lt; index &lt;&lt; &quot;\r&quot; &lt;&lt; flush;
+#endif
+      } else {
+#ifndef SILENT
+        cout &lt;&lt; &quot;\ndestroy failed &quot; &lt;&lt; index &lt;&lt; endl;
+#endif
+      }
+    } else {
+      if (p.release()) {
+#ifndef SILENT
+        cout &lt;&lt; &quot;r&quot; &lt;&lt; index &lt;&lt; &quot;\r&quot; &lt;&lt; flush;
+#endif
+      } else {
+#ifndef SILENT
+        cout &lt;&lt; &quot;\nrelease failed &quot; &lt;&lt; index &lt;&lt; endl;
+#endif
+      }
+    }
+    p = pnext;
+    index++;
+  }
+
+  cout &lt;&lt; &quot;\ndestroy or release &quot; &lt;&lt; index &lt;&lt; endl;
+
+#endif
+
+  cout &lt;&lt; &quot;synchronization&quot; &lt;&lt; endl;
+  delete ps;
+#ifndef SILENT
+  //  ps-&gt;printStatus();
+#endif
+  cout &lt;&lt; &quot;sizeof(SampleObject) &quot; &lt;&lt; sizeof(SampleObject) &lt;&lt; endl;
+  cout &lt;&lt; &quot;sizeof(SimpleTree) &quot; &lt;&lt; sizeof(ST) &lt;&lt; endl;
+  cout &lt;&lt; &quot;sizeof(PersistentObject) &quot; &lt;&lt; sizeof(PersistentObject) &lt;&lt; endl;
+  exit(1);
+}
+</PRE>
+
+<P>
+<BR><HR>
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

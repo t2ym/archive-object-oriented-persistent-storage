@@ -1,0 +1,127 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>PersistentOffset Class</TITLE>
+<META NAME="description" CONTENT="PersistentOffset Class">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node79.html">
+<LINK REL="previous" HREF="node77.html">
+<LINK REL="up" HREF="node58.html">
+<LINK REL="next" HREF="node79.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html1304"
+ HREF="node79.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1300"
+ HREF="node58.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1294"
+ HREF="node77.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1302"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1303"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1305"
+ HREF="node79.html">Entry Class</A>
+<B> Up:</B> <A NAME="tex2html1301"
+ HREF="node58.html">Persistent Storage Classes</A>
+<B> Previous:</B> <A NAME="tex2html1295"
+ HREF="node77.html">OffsetChunkPair Class</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H2><A NAME="SECTION00639000000000000000">
+<TT>PersistentOffset</TT> Class</A>
+</H2>
+<A NAME="persistentoffsetdesc">&#160;</A><A NAME="1074">&#160;</A>
+<P>
+<BR>
+<DIV ALIGN="CENTER"><A NAME="persistentoffset">&#160;</A><A NAME="1414">&#160;</A>
+<TABLE>
+<CAPTION><STRONG>Figure 3.20:</STRONG>
+<TT>PersistentOffset</TT> <I>Class</I></CAPTION>
+<TR><TD><IMG WIDTH="631" HEIGHT="400"
+ SRC="img25.gif"
+ ALT="\begin{figure}
+\begin{center}
+
+\includegraphics [scale=1]{PersistentOffset.ps}
+\end{center}\end{figure}"></TD></TR>
+</TABLE>
+</DIV>
+<BR>
+<P>
+The <TT>PersistentOffset</TT> class (See Figure <A HREF="node78.html#persistentoffset">3.20</A>) 
+represents an object in the owner <TT>Window</TT>.  The class is invisible
+from the user, and implements the <TT>SortableObject</TT> interface (See
+Section <A HREF="node52.html#sortableobjectdesc">3.2.2</A>).
+<P>
+Instances of the class is used as elements of the member variable 
+<TT>objectTable</TT> in the <TT>Window</TT>s.  Each element of the table
+corresponds to a chunk in the owner <TT>Window</TT>.  The class is completely
+passive and the accessors are its main functions.
+<P>
+The member variable <TT>offset</TT> contains the offset of the object
+the state of which it represents.  Its LSBs are storing three flags -
+<TT>inUse</TT>, <TT>fragmented</TT>, and <TT>grabbed</TT>.
+<P>
+There are many accessors for the <TT>offset</TT>.  The accessor 
+<TT>getOffset()</TT> extracts the offset part from the variable.  The 
+accessors <TT>isInUse()</TT>, <TT>setInUse()</TT>, <TT>clearInUse()</TT> are for
+the <TT>inUse</TT> flag.  The accessors <TT>isFragmented()</TT>, 
+<TT>setFragemeted()</TT>, and <TT>clearFragmented()</TT> are for the 
+<TT>fragmented</TT> flag.   The accessors <TT>isGrabbed()</TT>, 
+<TT>setGrabbed()</TT>, and <TT>clearGrabbed()</TT> are for the 
+<TT>grabbed</TT> flag.
+<P>
+The other member variable <TT>grabCountReadOnly</TT> contains the
+number of the <TT>PersistentPointer</TT>s which are read-only-grabbing the
+object.  The accessor <TT>getGrabCountReadOnly</TT> literally extracts the
+value.  The accessor <TT>incrementGrabCountReadOnly</TT> increments the
+counter, as the accessor <TT>decrementGrabCountReadOnly</TT> 
+decrements it.
+<P><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1304"
+ HREF="node79.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1300"
+ HREF="node58.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1294"
+ HREF="node77.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1302"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1303"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1305"
+ HREF="node79.html">Entry Class</A>
+<B> Up:</B> <A NAME="tex2html1301"
+ HREF="node58.html">Persistent Storage Classes</A>
+<B> Previous:</B> <A NAME="tex2html1295"
+ HREF="node77.html">OffsetChunkPair Class</A>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

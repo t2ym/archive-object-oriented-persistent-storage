@@ -1,0 +1,114 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>mmap() system call</TITLE>
+<META NAME="description" CONTENT="mmap() system call">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="previous" HREF="node26.html">
+<LINK REL="up" HREF="node26.html">
+<LINK REL="next" HREF="node28.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html617"
+ HREF="node28.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html613"
+ HREF="node26.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html609"
+ HREF="node26.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html615"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html616"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html618"
+ HREF="node28.html">Allocation Algorithms</A>
+<B> Up:</B> <A NAME="tex2html614"
+ HREF="node26.html">Mapping and Address Conversion</A>
+<B> Previous:</B> <A NAME="tex2html610"
+ HREF="node26.html">Mapping and Address Conversion</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H3><A NAME="SECTION00533100000000000000">
+<TT>mmap()</TT> system call</A>
+</H3>
+<A NAME="mmapsystemcall">&#160;</A><A NAME="145">&#160;</A>
+<P>
+The <TT>mmap()</TT> system call is the POSIX standard programming interface
+for mapping a region of a file in main memory.  The routine has the
+signature of
+<PRE>
+     void *mmap(void *start, size_t length, 
+                int prot, int fd, int flags, 
+                off_t offset);
+</PRE>
+<P>
+The first parameter <TT>start</TT> is the starting address of the mapped 
+region in main memory but it is strongly recommended for portability
+that this parameter should be set to 0, in which case the return value
+of this routine indicates the starting address.  The second parameter
+<TT>length</TT> is the length of the mapped region in bytes.  The third
+parameter <TT>prot</TT> is the protection mode for the region, which
+indicates reading, writing, and execution permission of the region.
+The fourth parameter <TT>flags</TT> indicates the mapping type which
+can be <B>shared</B>, <B>private</B>, or <B>fixed</B>.  In the shared type,
+the same physical memory is used for mapping the same region of the file.
+In the private type, the memory is mapped as copy-on-write and 
+modification in the region does not affect the other mappings of the
+same region of the file.  In the fixed type, the memory is located at
+the specified logical address in main memory, which degrades portability
+of the program.  The fifth parameter <TT>fd</TT> is the file descriptor of 
+the file to be mapped.  The last parameter <TT>offset</TT> is the starting 
+offset of the region in the file.  The mapping is performed page by page.  
+In most operating systems, a page has the size of 4096 bytes. [<A
+ HREF="node98.html#mmap">Linux:mmap 96</A>]
+[<A
+ HREF="node98.html#unixinternals">Vahalia 96</A>]
+<P>
+There are some relatives of <TT>mmap()</TT> routine, such as <TT>munmap()</TT>
+for unmapping, <TT>msync()</TT> for synchronization with the file.
+<P><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html617"
+ HREF="node28.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html613"
+ HREF="node26.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html609"
+ HREF="node26.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html615"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html616"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html618"
+ HREF="node28.html">Allocation Algorithms</A>
+<B> Up:</B> <A NAME="tex2html614"
+ HREF="node26.html">Mapping and Address Conversion</A>
+<B> Previous:</B> <A NAME="tex2html610"
+ HREF="node26.html">Mapping and Address Conversion</A>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

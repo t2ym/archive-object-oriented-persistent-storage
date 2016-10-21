@@ -1,0 +1,1803 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>PersistentStorage.h</TITLE>
+<META NAME="description" CONTENT="PersistentStorage.h">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node101.html">
+<LINK REL="previous" HREF="node99.html">
+<LINK REL="up" HREF="node99.html">
+<LINK REL="next" HREF="node101.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html1579"
+ HREF="node101.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1575"
+ HREF="node99.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1569"
+ HREF="node99.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1577"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1578"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1580"
+ HREF="node101.html">PersistentStorage.cc</A>
+<B> Up:</B> <A NAME="tex2html1576"
+ HREF="node99.html">The Sources</A>
+<B> Previous:</B> <A NAME="tex2html1570"
+ HREF="node99.html">The Sources</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H1><A NAME="SECTION001110000000000000000">
+<TT>PersistentStorage.h</TT></A>
+</H1>
+
+<PRE>
+// PersistentStorage.h
+// Copyright (C) 1997,98 Mori Tetsuya
+// 12/16/97
+// 12/17/97 
+// 12/20/97 map()
+// 12/21/97 grow()
+// 12/24/97 initializeObjectTable(), splitTopChunk(), ...
+// 12/26/97 destroy(), findChunk(), split()
+// 12/28/97 removeRedundantWindow(), -O3 optimization bug avoidance
+// 12/29/97 map() with validation, minimumChunkSize()
+// 12/30/97 cleanUp()
+// 1/2/98   setObjectFlag(), getEntryPoint(), stabilized
+// 1/3/98   PointerPair, PersistentObject
+
+#ifndef __PERSISTENT_STORAGE_H_
+#define __PERSISTENT_STORAGE_H_
+#pragma interface &quot;PersistentStorage.h&quot;
+
+
+#include &lt;stdio.h&gt;
+#include &lt;iostream.h&gt;
+#include &lt;time.h&gt;
+#include &quot;FileStat.h&quot;
+#include &quot;SortedTable.h&quot;
+#include &quot;MMap.h&quot;
+
+void breakpoint();
+#ifdef DEBUG
+#define STATUS(str) (cerr &lt;&lt; str, breakpoint())
+#else
+#define STATUS(str) (cerr &lt;&lt; str)
+#endif
+
+class PersistentStorage;
+class Arena;
+class ArenaInitialBlock;
+class Window;
+class Chunk;
+class OffsetChunkPair;
+class PersistentOffset;
+class Entry;
+class PersistentPointer;
+class PersistentObject;
+class PointerPair;
+
+#ifndef __BASIC_TYPES__
+#define __BASIC_TYPES__
+typedef int Integer32;
+typedef Integer32 SizeType;
+typedef Integer32 OffsetType;
+typedef Integer32 CounterType;
+typedef Integer32 ArenaID;
+typedef Integer32 EntryID;
+typedef Integer32 BoolType;
+enum { True = 1, False = 0 };
+typedef Integer32 ComparisonType;
+enum { GreaterThan = 1, EqualTo = 0, LessThan = -1 };
+typedef void *PointerType;
+
+#endif // __BASIC_TYPES__
+
+typedef Integer32 ObjectID;
+typedef PersistentObject *P;
+
+extern PersistentStorage *ps; // the unique PersistentStorage object
+
+/* 
+   Note: The order of declaration is coordinated so that 
+         any declaration of classes used for template may precede 
+         instantiations of template classes as class members.
+ */
+
+/*
+  PersistentOffset --  An element object for objectTable in Window.
+
+  A PersistentOffset object corresponds to a Chunk in the Window.
+  The object contains 
+  1) the offset of the Chunk
+  2) the flag for being in use
+  3) the flag for being grabbed
+  4) the flag for being fragmented
+  5) the counter for readonly grabbing
+ */
+class PersistentOffset { // SortableObject
+  friend class Arena;
+  friend class Window;
+  friend class OffsetChunkPair;
+  friend class SortedObjectTable&lt;PersistentOffset, OffsetType&gt;;
+protected:
+  OffsetType  offset; // the offset of the Chunk
+  CounterType grabCountReadOnly; // the counter for readonly grabbing 
+  // the member 'offset' contains 3 flags in its least significant 3 bits
+  static const OffsetType offsetMask = ~0x00000007;
+  static const OffsetType inUseMask = 0x00000001;
+  static const OffsetType fragmentedMask = 0x00000002;
+  static const OffsetType grabbedMask = 0x00000004;
+protected:
+  // constructors
+  // constructor for nullObject
+  PersistentOffset(): offset(0), grabCountReadOnly(0) {}
+  // regular constructor 
+  PersistentOffset(OffsetType off, BoolType inUse,
+                   BoolType fragmented = False, 
+                   BoolType grabbed = False) :
+    offset(off &amp; offsetMask), grabCountReadOnly(0) {
+      if (inUse) 
+        offset |= inUseMask;
+      if (fragmented)
+        offset |= fragmentedMask;
+      if (grabbed) 
+        offset |= grabbedMask;
+  }
+
+  // accessors
+  // get the offset of the Chunk
+  inline OffsetType getOffset() {
+    return offset &amp; offsetMask;
+  }
+  // probe the in use flag
+  inline BoolType isInUse() {
+    return offset &amp; inUseMask ? True : False;
+  }
+  // probe the fragmented flag
+  inline BoolType isFragmented() {
+    return offset &amp; fragmentedMask ? True : False;
+  }
+  // probe the grabbed flag
+  inline BoolType isGrabbed() {
+    return offset &amp; grabbedMask ? True : False;
+  }
+  // get the counter for the readonly grabbing
+  inline CounterType getGrabCountReadOnly() {
+    return grabCountReadOnly;
+  }
+  
+  // operations for the counter
+  // increment the counter by 1 without overflow checking
+  inline CounterType incrementGrabCountReadOnly() {
+    return ++grabCountReadOnly;
+  }
+  // decrement the counter by 1 with underflow checking
+  // returns -1 when failed
+  inline CounterType decrementGrabCountReadOnly() {
+    if (grabCountReadOnly &gt; 0) {
+      return --grabCountReadOnly;
+    } else {
+      return (CounterType)-1;
+    }
+  }
+
+  // operations for the flags
+  // set the in use flag
+  inline void setInUse() {
+    offset |= inUseMask;
+  }
+  // clear the in use flag
+  inline void clearInUse() {
+    offset &amp;= ~inUseMask;
+  }
+  // set the fragmented flag
+  inline void setFragmented() {
+    offset |= fragmentedMask;
+  }
+  // clear the fragmented flag
+  inline void clearFragmented() {
+    offset &amp;= ~fragmentedMask;
+  }
+  // set the grabbed flag
+  inline void setGrabbed() {
+    offset |= grabbedMask;
+  }
+  // clear the grabbed flag
+  inline void clearGrabbed() {
+    offset &amp;= ~grabbedMask;
+  }
+
+  // methods as a SortableObject
+  // compare with a PersistentOffset
+  inline ComparisonType compare(PersistentOffset &amp;po) {
+    return getOffset() &gt; po.getOffset() ? GreaterThan : 
+      (getOffset() &lt; po.getOffset() ? LessThan : EqualTo);
+  }
+  // compare with an offset
+  inline ComparisonType compare(OffsetType off) {
+    return getOffset() &gt; (off &amp; offsetMask) ? GreaterThan :
+      (getOffset() &lt; (off &amp; offsetMask) ? LessThan : EqualTo);
+  }
+  // get the key, which is the offset
+  inline OffsetType getKey() {
+    return offset &amp; offsetMask;
+  }
+  // probe if the object is null
+  inline BoolType isNull() {
+    return (offset &amp; offsetMask) == 0;
+  }
+  // the null object 
+  static PersistentOffset nullObject;
+}; // PersistentOffset
+
+/*
+  Window -- an element object for windowTable in Arena
+
+  Window is derived from MMap, which wraps the mmap() system call.
+  A Window object manipulates a memory mapping of an Arena.
+  The object contains
+  1) the counter for the total number of grabbings 
+     of the objects in the Window
+  2) the counter for the total number of readonly grabbings 
+     of the objects in the Window
+  3) the sorted table of the objects in the Window, 
+     which are represented by PersistentOffset objects
+ */
+class Window : protected MMap {
+  friend class Arena;
+  friend class Chunk;
+  friend class PersistentPointer;
+  friend class OffsetChunkPair;
+  friend class SortedPointerTable&lt;Window, OffsetType&gt;;
+  friend class PersistentStorage;
+protected:
+  BoolType    dirty;
+  CounterType totalGrabCount; // the total number of grabbings
+  CounterType totalGrabCountReadOnly; // the total number of readonly grabbings
+  // the sorted table of objects in the Window
+  SortedObjectTable&lt;PersistentOffset, OffsetType&gt; objectTable;
+protected:
+  // constructors
+
+  /* 
+     constructor for masterWindow, which is never mapped
+
+     parameter:
+     const char *file -- the file name of the Arena storage
+   */
+  Window(const char *file): 
+    MMap(file), // associates the file with the Window
+    totalGrabCount(-1), // invalid count
+    totalGrabCountReadOnly(-1) {} // invalid count
+
+  /* 
+     constructor for general Window's, which maps and initializes objectTable
+     
+     parameters:
+     Window     &amp;w -- the masterWindow object, which gives the file descriptor
+     OffsetType off -- the offset of the beginning of the Window
+     SizeType   len -- the size of the Window in bytes
+     OffsetType obj -- the offset of the object 
+                       that is requested to be grabbed, 
+                       also used as a hint for construction of objectTable
+     Window *before -- the previous Window
+     Window  *after -- the next Window
+     Arena   *arena -- the parent Window
+   */
+  Window(Window &amp;w, 
+         OffsetType off, 
+         SizeType len, 
+         OffsetType obj = 0,
+         Window *before = 0,
+         Window *after = 0,
+         Arena *arena = 0,
+         SizeType minimumChunkSize = 16);
+
+
+  // destructor
+  ~Window();
+
+  void printStatus();
+
+  /*
+    initializeObjectTable -- constructs objectTable
+    
+    parameter:
+    OffsetType obj -- used as a hint for tracing the Chunk list
+    Arena   *arena -- the parent of this Window
+
+    return value:
+     BoolType -- True if successful
+   */
+  BoolType initializeObjectTable(OffsetType obj, 
+                                 Window *before = 0, 
+                                 Window *after = 0,
+                                 Arena *arena = 0);
+
+  /*
+    isWithinRange -- check if the offset is within the Window
+
+    parameter:
+    OffsetType o -- the offset to be checked
+
+    return value:
+    BoolType -- whether the offset is within the window or not
+   */
+  inline BoolType isWithinRange(OffsetType o) {
+    return getAddr() &amp;&amp; 
+      getOffset() &lt;= o &amp;&amp; 
+      o &lt; getOffset() + (OffsetType)getLength();
+  }
+
+  /*
+    isValid -- check if the offset points a valid Chunk
+
+    parameter:
+    OffsetType o -- the offset to be checked
+
+    return value:
+    BoolType -- whether the offset points a valid Chunk or not
+   */
+  inline BoolType isValid(OffsetType o) {
+    return isWithinRange(o) &amp;&amp; !objectTable[o].isNull();
+  }
+
+  /*
+    isAllocated -- check if the offset points an ojbect in use
+
+    parameter:
+    OffsetType o -- the offset to be checked
+
+    return value:
+    BoolType -- whether the offset points an object in use or not
+   */
+  inline BoolType isAllocated(OffsetType o) {
+    return isValid(o) &amp;&amp; objectTable[o].isInUse();
+  }
+
+  /*
+    isGrabbed -- check if the offset points a grabbed ojbect
+
+    parameter:
+    OffsetType o -- the offset to be checked
+
+    return value:
+    BoolType -- whether the offset points a grabbed object or not
+   */
+  inline BoolType isGrabbed(OffsetType o) {
+    return isValid(o) &amp;&amp; objectTable[o].isGrabbed();
+  }
+
+  /*
+    isFragmented -- check if the offset points a fragmented Chunk
+
+    parameter:
+    OffsetType o -- the offset to be checked
+
+    return value:
+    BoolType -- whether the offset points a fragmented Chunk or not
+   */
+  inline BoolType isFragmented(OffsetType o) {
+    return isValid(o) &amp;&amp; objectTable[o].isFragmented();
+  }
+
+  /*
+    map -- convert an offset to the pointer to the corresponding Chunk
+    
+    parameter:
+    OffsetType o -- the offset to be converted
+
+    return value:
+    Chunk * -- the pointer to the corresponding Chunk,
+               null if not within the range
+   */
+  inline Chunk *map(OffsetType o) { // irrelevant to MMap::map()
+    if (isWithinRange(o)) {
+      return (Chunk *)((PointerType)getAddr() + (o - getOffset()));
+    } else {
+      return (Chunk *)0;
+    }
+  }
+
+  /*
+    grab -- part of the internal implementation of 
+            one of the primitive operations to a PersistentPointer,
+            grab an object for manipulation,
+            no two pointers can grab one object at the same time
+
+    parameter:
+    OffsetType o -- the offset of the Chunk
+
+    return value:
+    Chunk * -- the pointer to the grabbed Chunk
+   */
+  Chunk *grab(OffsetType o) {
+    if (o &amp; PersistentOffset::fragmentedMask) {
+      o &amp;= PersistentOffset::offsetMask;
+      if (isValid(o)) {
+        PersistentOffset &amp;po = objectTable[o];
+        if (!po.isGrabbed()) {
+          po.setGrabbed();
+          totalGrabCount++;
+          return (Chunk *)((PointerType)getAddr() + (o - getOffset()));
+        }
+      } 
+    } else {
+      o &amp;= PersistentOffset::offsetMask;
+      if (isValid(o)) {
+        PersistentOffset &amp;po = objectTable[o];
+        if (!po.isFragmented() &amp;&amp; 
+            po.isInUse() &amp;&amp; 
+            !po.isGrabbed()) {
+          po.setGrabbed();
+          totalGrabCount++;
+          dirty = True;
+          return (Chunk *)((PointerType)getAddr() + (o - getOffset()));
+        } else {
+#ifdef DEBUG
+          cerr &lt;&lt; &quot;Window::grab &quot; 
+               &lt;&lt; (po.isFragmented() ? &quot;Frag &quot; : &quot;Comp &quot;)
+               &lt;&lt; (po.isInUse() ? &quot;Used &quot; : &quot;Free &quot;)
+               &lt;&lt; (po.isGrabbed() ? &quot;Grabbed &quot; : &quot;Released &quot;)
+               &lt;&lt; endl;
+#endif
+          return 0;
+        }
+      } else {
+#ifdef DEBUG
+        cerr &lt;&lt; &quot;Window::grab not valid &quot; &lt;&lt; o &lt;&lt; endl; 
+#endif
+      }
+    }
+    return (Chunk *)0;
+  }
+
+  /*
+    release -- part of the internal implementation of 
+               one of the primitive operations to a PersistentPointer,
+               release an object to notify the end of its manipulation,
+               only grabbed objects can be released
+
+    parameter:
+    OffsetType o -- the offset of the Chunk
+
+    return value:
+    BoolType -- True if successful
+   */
+  BoolType release(OffsetType o) {
+    if (isValid(o)) {
+      PersistentOffset &amp;po = objectTable[o];
+      if (totalGrabCount &gt; 0 &amp;&amp; 
+          po.isGrabbed()) {
+        po.clearGrabbed();
+        totalGrabCount--;
+        return True;
+      } else {
+#ifdef DEBUG
+        cerr &lt;&lt; &quot;Window::release totalGrabCount &quot; 
+             &lt;&lt; totalGrabCount &lt;&lt; &quot; &quot;
+             &lt;&lt; (po.isGrabbed() ? &quot;Grabbed &quot; : &quot;Released &quot;)
+             &lt;&lt; endl; 
+#endif
+      }
+    } else {
+#ifdef DEBUG
+        cerr &lt;&lt; &quot;Window::release not valid &quot; &lt;&lt; o &lt;&lt; endl; 
+#endif
+    }
+    return False;
+  }
+
+  /*
+    grabReadOnly -- part of the internal implementation of 
+                    one of the primitive operations to a PersistentPointer,
+                    grab an object for reference,
+                    more than one pointer can grab at the same time
+
+    parameter:
+    OffsetType o -- the offset of the Chunk
+
+    return value:
+    Chunk * -- the pointer to the grabbed Chunk
+   */
+  Chunk *grabReadOnly(OffsetType o) {
+    if (isValid(o)) {
+      PersistentOffset &amp;po = objectTable[o];
+      if (!po.isFragmented() &amp;&amp;
+          po.isInUse()) {
+        if (po.incrementGrabCountReadOnly() &gt;= 0) {
+          totalGrabCountReadOnly++;
+          return (Chunk *)((PointerType)getAddr() + (o - getOffset()));
+        }
+      }
+    }
+    return (Chunk *)0;
+  }
+
+  /*
+    releaseReadOnly -- part of the internal implementation of 
+                       one of the primitive operations to a PersistentPointer,
+                       release an object to notify the end of its reference,
+                       only grabbed-for-reference objects can be released
+
+    parameter:
+    OffsetType o -- the offset of the Chunk
+
+    return value:
+    BoolType -- True if successful
+   */
+  BoolType releaseReadOnly(OffsetType o) {
+    if (isValid(o)) {
+      PersistentOffset &amp;po = objectTable[o];
+      if (!po.isFragmented() &amp;&amp; 
+          totalGrabCountReadOnly &gt; 0 &amp;&amp;
+          po.getGrabCountReadOnly() &gt; 0) {
+        if (po.decrementGrabCountReadOnly() &gt;= 0) {
+          totalGrabCountReadOnly--;
+          return True;
+        }
+      }
+    }
+    return False;
+  }
+
+  // accessors
+
+  // get the total number of the grabbed objects in the Window
+  inline CounterType getTotalGrabCount() {
+    return totalGrabCount;
+  }
+
+  // get the total number of the pointers that point 
+  //     the grabbed-for-reference objects in the Window
+  inline CounterType getTotalGrabCountReadOnly() {
+    return totalGrabCountReadOnly;
+  }
+
+  inline BoolType isCompletelyReleased() {
+    return getTotalGrabCount() == 0 &amp;&amp; 
+      getTotalGrabCountReadOnly() == 0;
+  }
+
+  inline BoolType isDirty() {
+    return dirty;
+  }
+
+  inline void setDirty() {
+    dirty = True;
+  }
+
+  inline void clearDirty() {
+    dirty = False;
+  }
+
+  // get the number of the grabbed-for-reference pointers 
+  //     that point the object with the offset o
+  // return -1 if the offset o is invalid
+  inline CounterType getGrabCountReadOnly(OffsetType o) {
+    if (isValid(o)) {
+      PersistentOffset &amp;po = objectTable[o];
+      if (!po.isFragmented() &amp;&amp; 
+          po.isInUse()) {
+        return po.getGrabCountReadOnly();
+      }
+    }
+    return (CounterType)-1;
+  }
+  
+  // methods as a SortableObject
+
+  // compare with a Window
+  // the beginning offset is used for comparison
+  inline ComparisonType compare(Window &amp;w) {
+    OffsetType o1 = getOffset();
+    OffsetType o2 = w.getOffset();
+    return o1 &gt; o2 ? 
+      GreaterThan : 
+      (o1 &lt; o2 ? LessThan : 
+       (getLength() &lt; w.getLength() ? 
+        LessThan :
+        (getLength() &gt; w.getLength() ? 
+         GreaterThan : EqualTo)));
+  }
+
+  /* 
+     compare with an offset
+
+     The policy for comparison is somewhat complicated:
+       There are two different schemes for comparison.
+       One scheme just checks whether the offset is within the Window.
+       This scheme is specified by a fragmentedMask in the offset.
+       Another scheme assumes that the offset points to a valid Chunk.
+       The conditions for equality are:
+       1) The offset points to a valid Chunk within the Window.
+          Therefore, there should be an element with the offset in objectTable.
+       2) The Chunk must be contained completely in the Window, i.e.,
+          the chunk is not fragmented.
+       Name the zone where the above condition are fulfilled 
+       as the equality zone.
+       The window is 'less' than the offset 
+       if the offset is after the equality zone.
+       The window is 'greater' than the offset
+       if the offset is before the equality zone.
+       In short, the offset within the equality zone is the one that can be
+       referenced or manipulated through the Window.
+   */
+  inline ComparisonType compare(OffsetType o) {
+    if (o &amp; PersistentOffset::fragmentedMask) {
+      // The first scheme
+      if (isWithinRange(o &amp; PersistentOffset::offsetMask)) {
+        return EqualTo;
+      } else if ((o &amp; PersistentOffset::offsetMask) &lt; getOffset()) {
+        return GreaterThan;
+      } else {
+        return LessThan;
+      }
+    } else {
+      // The object validation scheme
+      if (isWithinRange(o)) {
+        if (isValid(o)) {
+          if (!isFragmented(o)) {
+            return EqualTo;
+          } else {
+            CounterType c = objectTable.getSize();
+            if (c &lt;= 0) { // no objects ??
+              return LessThan;
+            }
+            PersistentOffset ofirst = objectTable(0);
+            if (!ofirst.isFragmented()) { 
+              return LessThan;
+            } else {
+              CounterType i;
+              for (i = 1; i &lt; c; i++) {
+                ofirst = objectTable(i);
+                if (!ofirst.isFragmented())
+                  break;
+              }
+              if (ofirst.isFragmented()) { // all objects are fragmented
+                return LessThan;
+              }
+              // ofirst is the first valid and non-fragmented object
+              if (ofirst.compare(o) &lt; 0) {
+                return LessThan;
+              } else {
+                return GreaterThan;
+              }
+            }
+          }
+        } else { // within range but not valid
+          return EqualTo; // switch to the first scheme
+        }
+      } else { // out of range
+        if (getOffset() &gt; o) {
+          return GreaterThan;
+        } else {
+          return LessThan;
+        }
+      }
+    }
+  }
+
+  // get the key, which is the beginning offset of the Window 
+  inline OffsetType getKey() {
+    return (OffsetType)getOffset();
+  }
+
+  /*
+    isContainedBy -- check if 'this' Window is completely contained by
+                     another Window w
+   */
+  inline BoolType isContainedBy(Window &amp;w) {
+    if (getOffset() &gt;= w.getOffset() &amp;&amp;
+        getOffset() + getLength() &lt;= w.getOffset() + w.getLength()) {
+      return True;
+    } else {
+      return False;
+    }
+  }
+
+  /*
+    isSeparatedFrom -- check if 'this' Window is not overlapped with
+                       another Window w
+   */
+  inline BoolType isSeparatedFrom(Window &amp;w) {
+    if (getOffset() &gt;= w.getOffset()) {
+      if (getOffset() &gt;= (w.getOffset() + (OffsetType)w.getLength())) {
+        return True;
+      } else {
+        return False;
+      }
+    } else {
+      if ((getOffset() + (OffsetType)getLength()) &lt;= w.getOffset()) {
+        return True;
+      } else {
+        return False;
+      }
+    }
+  }
+}; // Window
+
+/* 
+   Chunk -- an element of a doubly linked list which is located at
+            the head of a used/free block in Arena
+
+   The Chunk object is a unit of object allocation in persistent storage,
+   and marks a storage block, i.e., it has one-to-one correspondence with
+   an object in a persistent storage.
+   The object contains:
+   1) the size of the previous Chunk in bytes
+   2) the size of the Chunk in bytes
+   3) the offset of the previous FREE Chunk when the Chunk is free
+   4) the offset of the next FREE Chunk when the Chunk is free
+   5) the flag that shows whether the PREVIOUS Chunk is in use
+   6) the flag that shows whether the Chunk is a dummy one 
+      for non-perisitent storage
+   7) the head of the memory block for the object when the Chunk is in use
+ */
+class Chunk {
+  friend class Arena;
+  friend class Window;
+  friend class OffsetChunkPair;
+  friend class PersistentStorage;
+  friend class PersistentPointer;
+protected:
+  SizeType prevSize; // the size of the previous Chunk in bytes
+  SizeType size; // the size of the Chunk in bytes
+  OffsetType backward; // the offset of the previous FREE Chunk
+  OffsetType forward; // the offset of the next FREE Chunk
+protected:
+  // the member 'size' contains two flags at its least significant 3 bits
+  static const SizeType sizeMask = ~0x00000007;
+  static const SizeType prevInUseMask = 0x00000001;
+  static const SizeType dummyChunkMask = 0x00000002;
+  // the size of the Chunk in use 
+  static const SizeType inUseChunkSize = sizeof(SizeType) * 2;
+protected:
+  /* 
+     constructor
+
+     parameters:
+     SizeType prev -- the size of the previous Chunk in bytes
+     SizeType sz -- the size of this Chunk in bytes 
+     BoolType pInUse -- whether the previous Chunk is in use or not
+     OffsetType bk -- the offset of the previous free Chunk
+     OffsetType fd -- the offset of the next free Chunk
+     BoolType dummy -- whether this Chunk is dummy
+   */
+  Chunk(SizeType prev, SizeType sz, 
+        BoolType pInUse, 
+        OffsetType bk = 0, 
+        OffsetType fd = 0, 
+        BoolType dummy = False): 
+    prevSize(prev &amp; sizeMask), 
+    size(sz &amp; sizeMask), 
+    backward(bk), 
+    forward(fd) {
+      if (pInUse) 
+        size |= prevInUseMask;
+      if (dummy)
+        size |= dummyChunkMask;
+  }
+
+  // destructor
+  ~Chunk() {}
+
+  // accessors
+
+  // get the size of this Chunk
+  inline SizeType getSize() {
+    return size &amp; sizeMask;
+  }
+  
+  // get the size of the previous Chunk
+  inline SizeType getPrevSize() {
+    return prevSize &amp; sizeMask;
+  }
+  
+  // operations
+  
+  // set the size of this Chunk, preserving flags
+  inline SizeType setSize(SizeType sz) {
+    return size = (sz &amp; sizeMask) | (size &amp; ~sizeMask);
+  }
+
+  // set the size of the previous Chunk
+  inline SizeType setPrevSize(SizeType sz) {
+    return prevSize = (sz &amp; sizeMask) | (prevSize &amp; ~sizeMask);
+  }
+
+  // set the previous-in-use flag
+  inline void setPrevInUse() {
+    size |= prevInUseMask;
+  }
+
+  // clear the previous-in-use flag
+  inline void clearPrevInUse() {
+    size &amp;= ~prevInUseMask;
+  }
+  
+  // set the dummy flag
+  inline void setDummy() {
+    size |= dummyChunkMask;
+  }
+
+  // clear the dummy flag
+  inline void clearDummy() {
+    size &amp;= ~dummyChunkMask;
+  }
+
+  // probe the previous-in-use flag
+  inline BoolType isPrevInUse() {
+    return size &amp; prevInUseMask ? True : False;
+  }
+
+  // probe the dummy flag
+  inline BoolType isDummy() {
+    return size &amp; dummyChunkMask ? True : False;
+  }
+
+  // get the memory block of this Chunk
+  inline PointerType getMemBlock() {
+    return ((PointerType)this) + inUseChunkSize;
+  }
+
+  // a static member function that generates 
+  // the pointer to the Chunk from a pointer to an object
+  static Chunk *getChunk(PointerType p) {
+    return (Chunk *)(p - inUseChunkSize);
+  }
+}; // Chunk
+
+/*
+  PersistentPointer -- a persistent pointer object that points to 
+                       a persistent object in PersistentStorage
+
+  The PersistentPointer object represents a unique location in
+  the PersistentStorage.  The object has internal states for grabbing.
+  Therefore, in order to grab the pointed object, a PersistentPointer 
+  object must be copied to another object when located in the 
+  PersistentStorage.
+  The object contains:
+  1) the integer identifier for specifying Arena
+  2) the integer offset for specifying a location in the Arena
+ */
+class PersistentPointer {
+  friend class PersistentStorage;
+protected:
+  ArenaID     arenaID; // the identifier for Arena
+  OffsetType  offset; // the offset in the Arena
+  // the member 'offset' contains flags at its least significant 3 bits
+  static const OffsetType offsetMask = ~0x00000007;
+  static const OffsetType grabbedMask = 0x00000004;
+  static const OffsetType grabbedReadOnlyMask = 0x00000002;
+public:
+  // constructors
+
+  // constructor for copying
+  // flags are cleared
+  PersistentPointer(PersistentPointer &amp;pp): 
+    arenaID(pp.arenaID), offset(pp.offset &amp; offsetMask) {}
+
+  // constructor for null pointer
+  PersistentPointer(): arenaID(0), offset(0) {}
+
+protected:
+  /*
+    protected constructor for allocator
+
+    
+   */
+  PersistentPointer(ArenaID aid, OffsetType off,
+                    BoolType grabbed = False,
+                    BoolType grabbedReadOnly = False):
+    arenaID(aid), offset(off &amp; offsetMask) {
+      if (grabbed) 
+        offset |= grabbedMask;
+      if (grabbedReadOnly)
+        offset |= grabbedReadOnlyMask;
+  }
+
+  // protected accessors
+
+  // get the offset
+  inline OffsetType getOffset() {
+    return offset &amp; offsetMask;
+  }
+  
+  // get the Arena ID
+  inline ArenaID getArenaID() {
+    return arenaID;
+  }
+
+  // set the grabbed flag
+  inline void setGrabbed() {
+    offset |= grabbedMask;
+  }
+
+  // clear the grabbed flag
+  inline void clearGrabbed() {
+    offset &amp;= ~grabbedMask;
+  }
+
+  // set the grabbed-read-only flag
+  inline void setGrabbedReadOnly() {
+    offset |= grabbedReadOnlyMask;
+  }
+
+  // clear the grabbed-read-only flag
+  inline void clearGrabbedReadOnly() {
+    offset &amp;= ~grabbedReadOnlyMask;
+  }
+
+public:
+  // destructor
+  ~PersistentPointer() {}
+
+  // assignment operators
+
+  // assignment with another PersistentPointer
+  // flags are cleared
+  inline PersistentPointer &amp;operator=(PersistentPointer pp) {
+    arenaID = pp.arenaID;
+    offset = pp.offset &amp; offsetMask;
+    return *this;
+  }
+
+  // assignment with 0 to generate null pointer
+  inline PersistentPointer &amp;operator=(OffsetType off) {
+    // argument off is discarded
+    off = 0;
+    arenaID = 0;
+    offset = 0;
+    return *this;
+  }
+
+  inline BoolType operator==(OffsetType off) {
+    off = 0;
+    return offset == 0;
+  }
+
+  inline BoolType operator!=(OffsetType off) {
+    off = 0;
+    return offset != 0;
+  }
+    
+  inline BoolType operator==(PersistentPointer &amp;pp) {
+    return (this-&gt;arenaID == pp.arenaID) &amp;&amp; 
+      (this-&gt;offset &amp; offsetMask) == (pp.offset &amp; offsetMask);
+  }
+
+  inline BoolType operator!=(PersistentPointer &amp;pp) {
+    return (this-&gt;arenaID != pp.arenaID) || 
+      (this-&gt;offset &amp; offsetMask) != (pp.offset &amp; offsetMask);
+  }
+
+  // accessors
+
+  // probe the grabbed flag
+  inline BoolType isGrabbed() {
+    return (offset &amp; grabbedMask) ? True : False;
+  }
+
+  // probe the grabbedReadOnly flag
+  inline BoolType isGrabbedReadOnly() {
+    return (offset &amp; grabbedReadOnlyMask) ? True : False;
+  }
+  
+  // probe if persistent
+  inline BoolType isPersistent() { 
+    return arenaID != 0;
+  }
+
+  // probe if neither grabbed nor grabbedReadOnly
+  inline BoolType isReleased() {
+    return !isGrabbed() &amp;&amp; !isGrabbedReadOnly();
+  }
+
+  // probe if null
+  inline BoolType isNull() {
+    return (offset &amp; offsetMask) == 0;
+  }
+
+  /*
+    grab -- one of the primitive operations to a PersistentPointer,
+            grab an object for manipulation,
+            no two pointers can grab one object at the same time
+
+    parameter: none
+
+    return value:
+    PointerType -- the pointer to the grabbed object, 0 if failed
+   */
+  inline PointerType grab();
+
+  /*
+    release -- one of the primitive operations to a PersistentPointer,
+               release an object to notify the end of its manipulation,
+               only grabbed objects can be released
+
+    parameter: none
+
+    return value:
+    BoolType -- True if successful
+   */
+  inline BoolType release();
+
+  /*
+    grabReadOnly -- one of the primitive operations to a PersistentPointer,
+                    grab an object for reference,
+                    more than one pointer can grab at the same time
+
+    parameter: none
+
+    return value:
+    PointerType -- the pointer to the grabbed object, 0 if failed
+   */
+  inline PointerType grabReadOnly();
+
+  /*
+    releaseReadOnly -- one of the primitive operations to a PersistentPointer,
+                       release an object to notify the end of its reference,
+                       only grabbed-for-reference objects can be released
+
+    parameter: none
+
+    return value:
+    BoolType -- True if successful
+   */
+  inline BoolType releaseReadOnly();
+}; // PersistentPointer
+
+/*
+  ArenaInitialBlock -- The capsule for basic information on an Arena storage.
+
+  This object is located at the initial block of every Arena.
+ */
+class ArenaInitialBlock {
+  friend class Arena;
+  friend class Window;
+  friend class Chunk;
+protected:
+  char version[128];
+  char copyright[128];
+  char timestamp[128];
+  
+  ArenaID    arenaID;
+  SizeType   arenaSize;
+  OffsetType freeList;
+  OffsetType topChunk;
+
+protected:
+  static const char Version[] = 
+  &quot;PersistentStorage version 0.2.5 &quot; __DATE__ &quot; &quot; __TIME__;
+  static const char Copyright[] = 
+  &quot;Copyright(C) 1997 Mori Tetsuya / n971270@yamata.icu.ac.jp&quot;;
+  static const char TimeStampFormat[] = &quot;ArenaID %08x, created %s&quot;;
+protected:
+  ArenaInitialBlock(ArenaID aid) : 
+    arenaID(aid),
+    arenaSize(0),
+    freeList(0),
+    topChunk(0) {
+    strcpy(version, Version);
+    strcpy(copyright, Copyright);
+    time_t t = time(0);
+    sprintf(timestamp, TimeStampFormat, aid, ctime(&amp;t));
+  }
+};
+
+/* 
+   OffsetChunkPair -- the pair of OffsetType offset and Chunk *chunk
+                      used during the allocation process
+ */
+typedef Chunk *PChunk;
+class OffsetChunkPair {
+  friend class Arena;
+  friend class Chunk;
+  friend class Window;
+protected:
+  OffsetType offset;
+  Chunk *chunk;
+public:
+  OffsetChunkPair(OffsetType off = 0, Chunk *ch = 0) : offset(off), chunk(ch) {
+  }
+  inline OffsetChunkPair &amp;operator = (OffsetType o) {
+    chunk = 0;
+    offset = o;
+    return *this;
+  }
+  inline BoolType operator == (OffsetType o) {
+    return offset == o;
+  }
+  inline BoolType operator != (OffsetType o) {
+    return offset != o;
+  }
+  inline BoolType operator == (OffsetChunkPair p) {
+    return offset == p.offset;
+  }
+  inline BoolType operator != (OffsetChunkPair p) {
+    return offset != p.offset;
+  }
+  inline operator OffsetType () {
+    return offset;
+  }
+  inline operator PChunk () {
+    return chunk;
+  }
+  inline OffsetType getPrevChunk(Arena *arena, BoolType fragmented = True);
+  inline OffsetType getNextChunk(Arena *arena, BoolType fragmented = True);
+  inline Chunk *map(Arena *arena, 
+                    BoolType fragmented = True,
+                    BoolType anywhere = False);
+  inline Chunk *map(Window *window);
+};
+
+/*
+  Arena -- an element of PersistentStorage 
+
+  An Arena object corresponds to a file that is used as 
+  a persistent storage space.  An offset from the beginning 
+  of the file is used for pointing a unique location in
+  the storage.  An Arena is manipulated through Window 
+  objects, which map a region of a file on the main storage.
+  Allocation and destruction of any object in an Arena are
+  accomplished by manipulation of Chunk objects.  A Chunk
+  can be in two states, in-use and free.  An in-use Chunk
+  is followed by a memory block where there is a single 
+  persistent object.  A free Chunk is followed by a free
+  memory block.  Chunks are doubly-linked in two parallel
+  ways in order to trace Chunk lists.  An Arena manipulates
+  such lists to provide reusable and free sized storage 
+  space.
+  The object contains:
+  1) the integer identifier for Arena
+  2) the size of Arena storage space in bytes
+  3) the master Window object for mapping
+  4) the sorted table of Window objects
+  5) the offset of the free Chunk list
+  6) the offset of the top free Chunk
+
+  A desirable scheme for better performance:
+  An arena ID can contain more than just the ID of the arena.
+  To improve performance by reduction of fragmentation,
+  An arena have the minimum size of free chunks.
+  The 6 MSBs represent the size.
+  
+ */
+class Arena {
+  friend class PersistentStorage;
+  friend class PersistentPointer;
+  friend class Chunk;
+  friend class OffsetChunkPair;
+  friend class Window;
+  friend class SortedPointerTable&lt;Arena, ArenaID&gt;;
+protected:
+  ArenaID      arenaID; // the identifier for this Arena
+  static const CounterType minimumChunkBitShifts = 24;
+  static const ArenaID minimumChunkMask = 0x1f000000;
+  SizeType     arenaSize; // the size of thie Arena in bytes
+  Window       masterWindow; // the master Window object, never mapped
+  SortedPointerTable&lt;Window, OffsetType&gt; windowTable; // the table of Windows
+  OffsetType freeList; // the offset of the free Chunk list
+  OffsetType topChunk; // the offset of the top free Chunk
+  SizeType   maximumFreeChunk;
+protected:
+  /* 
+     constructor 
+     
+     parameters:
+     ArenaID aid -- the arena ID
+     const char *storageFile -- the file name for storage
+   */
+  Arena(ArenaID aid, const char *storageFile);
+
+  // destructor
+  ~Arena();
+
+  void printStatus();
+
+  BoolType objectTableCheck();
+
+  // primitive operations
+
+  /*
+    allocate -- part of an internal implementation of one of the 
+                primitive operations on the PersistentStorage.
+         
+    This operation finds an appropriate free Chunk, splits it, and
+    cut out a new Chunk which is bigger than the specified size. 
+    
+    parameter:
+    SizeType s -- the size of the requested Chunk size, including Chunk
+    BoolType persistent -- True if request persistent storage
+
+    return value:
+    OffsetType -- the offset of the allocated Chunk, 0 if failed
+   */
+  OffsetType allocate(SizeType s);
+
+  /*
+    destroy -- part of an internal implementation of one of the
+               primitive operations on the PersistentStorage.
+               
+    This operation destroys the in-use Chunk at the specified offset
+    and restores it to the free Chunk list.
+    parameter:
+    OffsetType o -- the offset of the in-use Chunk to be destroyed
+    
+    return value:
+    BoolType -- True if successful
+   */
+  BoolType destroy(OffsetType o);
+
+  /*
+    isMapped -- probe whether the offset o is mapped in a Window
+   */
+  inline BoolType isMapped(OffsetType o) {
+    Window *window = windowTable[o];
+    if (window != 0) {
+      return window-&gt;isWithinRange(o);
+    } else {
+      return False;
+    }
+  }
+
+  /*
+    isValid -- probe whether the offset o is a valid offset to a Chunk
+    
+    This operation maps the offset if not mapped.
+   */
+  inline BoolType isValid(OffsetType o) {
+    Window *window = windowTable[o];
+    if (window != 0) { // Window found
+      return window-&gt;isValid(o);
+    } else { // Window not found
+      if (map(o) != 0) { // new Window must be created to map the offset
+        window = windowTable[o]; 
+        if (window != 0) {
+          return window-&gt;isValid(o);
+        } else {
+          return False;
+        }
+      } else {
+        return False;
+      }
+    }
+  }
+
+  /*
+    isAllocated -- probe whether the offset o points to an allocated Chunk
+
+    This operation maps the offset if not mapped.
+   */
+  inline BoolType isAllocated(OffsetType o) {
+    Window *window = windowTable[o];
+    if (window != 0) { // Window found
+      return window-&gt;isAllocated(o);
+    } else { // Window not found
+      if (map(o) != 0) { // new Window must be created to map the offset
+        window = windowTable[o]; 
+        if (window != 0) {
+          return window-&gt;isAllocated(o);
+        } else {
+          return False;
+        }
+      } else {
+        return False;
+      }
+    }
+  }
+
+
+  /*
+    map -- map the Chunk which begins at the offset o
+   */
+  Chunk *map(OffsetType o);
+
+  Window *mapWindow(OffsetType o);
+
+  /*
+    grab -- part of the internal implementation of one of the primitive
+            operations on PersistentStorage.
+            
+    This operation grabs an object for manipulation.
+    No two pointers can grab one object at the same time.
+
+    parameter:
+    OffsetType o -- the offset of the Chunk
+
+    return value:
+    Chunk * -- the pointer to the grabbed Chunk
+   */
+  inline Chunk *grab(OffsetType o) {
+    if (o &amp; PersistentOffset::fragmentedMask) {
+      o &amp;= PersistentOffset::offsetMask;
+      if (!isGrabbed(o | PersistentOffset::fragmentedMask)) { 
+        Window *window = windowTable[o];
+        if (window == 0)
+          window = windowTable[o | PersistentOffset::fragmentedMask];
+        return window-&gt;grab(o | PersistentOffset::fragmentedMask);
+      } else {
+        return 0;
+      }
+    } else {
+      if (isAllocated(o) &amp;&amp;
+          !isGrabbed(o)) { 
+        Window *window = windowTable[o];
+        return window-&gt;grab(o);
+      } else {
+#ifdef DEBUG
+        cerr &lt;&lt; &quot;Arena::grab &quot; &lt;&lt; o &lt;&lt; &quot; &quot;
+             &lt;&lt; (isAllocated(o) ? &quot;Used &quot; : &quot;Free &quot;)
+             &lt;&lt; (isGrabbed(o) ? &quot;Grabbed &quot; : &quot;Released &quot;)
+             &lt;&lt; endl;
+        objectTableCheck();
+#endif
+        return 0;
+      }
+    }
+  }
+
+  /*
+    release -- part of the internal implementation of one of the primitive
+               operations on PersistentStorage.
+            
+    This operation releases an object to notify the end of 
+    its manipulation.  Only grabbed objects can be released.
+
+    parameter: 
+    OffsetType o -- the offset of the grabbed Chunk
+
+    return value:
+    BoolType -- True if successful
+   */
+  inline BoolType release(OffsetType o) {
+    if (o &amp; PersistentOffset::fragmentedMask) {
+      o &amp;= PersistentOffset::offsetMask;
+      if (isGrabbed(o | PersistentOffset::fragmentedMask)) {
+        Window *window = windowTable[o];
+        if (window == 0) 
+          window = windowTable[o | PersistentOffset::fragmentedMask];
+        return window-&gt;release(o);
+      } else {
+        return False;
+      }
+    } else {
+      if (isAllocated(o) &amp;&amp;
+          isGrabbed(o)) {
+        Window *window = windowTable[o];
+        return window-&gt;release(o);
+      } else {
+#ifdef DEBUG
+        cerr &lt;&lt; &quot;Arena::release &quot; &lt;&lt; o &lt;&lt; &quot; &quot;
+             &lt;&lt; (isAllocated(o) ? &quot;Used &quot; : &quot;Free &quot;)
+             &lt;&lt; (isGrabbed(o) ? &quot;Grabbed &quot; : &quot;Released &quot;)
+             &lt;&lt; endl;
+#endif
+        return False;
+      }
+    }
+  }
+
+  /*
+    grabReadOnly -- part of the internal implementation of 
+                    one of the primitive operations to a PersistentPointer,
+                    grab an object for reference,
+                    more than one pointer can grab at the same time
+
+    parameter:
+    OffsetType o -- the offset of the Chunk
+
+    return value:
+    Chunk * -- the pointer to the grabbed Chunk
+   */
+  inline Chunk *grabReadOnly(OffsetType o) {
+    if (isAllocated(o)) {
+      Window *window = windowTable[o];
+      return window-&gt;grabReadOnly(o);
+    } else {
+      return 0;
+    }
+  }
+
+  /*
+    releaseReadOnly -- part of the internal implementation of 
+                       one of the primitive operations to a PersistentPointer,
+                       release an object to notify the end of its reference,
+                       only grabbed-for-reference objects can be released
+
+    parameter:
+    OffsetType o -- the offset of the Chunk
+
+    return value:
+    BoolType -- True if successful
+   */
+  inline BoolType releaseReadOnly(OffsetType o) {
+    if (isAllocated(o)) {
+      Window *window = windowTable[o];
+      return window-&gt;releaseReadOnly(o);
+    } else {
+      return False;
+    }
+  }
+
+  /*
+    isGrabbed -- probe whether the Chunk which begins at the offset o
+                 is grabbed.
+   */
+  inline BoolType isGrabbed(OffsetType o) {
+    if (o &amp; PersistentOffset::fragmentedMask) {
+      o &amp;= PersistentOffset::offsetMask;
+      Window *window = windowTable[o];
+      if (window == 0)
+        window = windowTable[o | PersistentOffset::fragmentedMask];
+      if (window != 0) { // Window found
+        return window-&gt;isGrabbed(o);
+      } else { // Window not found
+        return False;
+      }
+    } else {
+      Window *window = windowTable[o];
+      if (window != 0) { // Window found
+        return window-&gt;isGrabbed(o);
+      } else { // Window not found
+        return False;
+      }
+    }
+  }
+
+  /*
+    getGrabCountReadOnly -- get the read-only-grabbing count of the Chunk
+                 which begins at the offset o
+   */
+  CounterType getGrabCountReadOnly(OffsetType o) {
+    Window *window = windowTable[o];
+    if (window != 0) {
+      return window-&gt;getGrabCountReadOnly(o);
+    } else {
+      return 0;
+    }
+  }
+
+  /*
+    synchronize -- synchronize the Window that maps the offset o
+
+    parameter:
+    OffsetType o -- the offset of the object to synchronize,
+                    synchronize all Window objects when o = 0
+
+    return value:
+    BoolType -- True if successful
+   */
+  BoolType synchronize(OffsetType o = 0);
+
+
+  SizeType cleanUp(BoolType completely = False);
+
+  // methods as SortableObject
+
+  // compare with another Arena
+  // Its arenaID is the key.
+  inline ComparisonType compare(Arena &amp;a) {
+    return arenaID &gt; a.arenaID ? GreaterThan : 
+      (arenaID &lt; a.arenaID ? LessThan : EqualTo);
+  }
+
+  // compare with ArenaID
+  inline ComparisonType compare(ArenaID aid) {
+    return arenaID &gt; aid ? GreaterThan :
+      (arenaID &lt; aid ? LessThan : EqualTo);
+  }
+  
+  // get the key, which is arenaID
+  inline ArenaID getKey() {
+    return arenaID;
+  }
+
+private:
+  inline SizeType getMinimumChunkSize() {
+    return 1 &lt;&lt; (4 + ((arenaID &amp; minimumChunkMask) &gt;&gt; minimumChunkBitShifts));
+  }
+
+  inline static ArenaID calculateMinimumChunkSizeBits(SizeType size) {
+    register SizeType s = alignChunkSize(size) &gt;&gt; 4; 
+    register SizeType log = 0;
+    // calculate log2 s
+    while ((s &gt;&gt;= 1) &gt; 0) 
+      log++;
+    return (ArenaID)(log * (1 &lt;&lt; minimumChunkBitShifts));
+  }
+  /*
+    alignChunkSize -- align the requested memory block size to
+                      its appropriate Chunk size
+
+    16 bytes is the smallest Chunk size.
+    parameter:
+    SizeType s -- the size of the requested memory block size
+
+    return value:
+    SizeType -- the size of the appropriate Chunk
+   */
+  inline static SizeType alignChunkSize(SizeType s) {
+    return ((s + Chunk::inUseChunkSize) &amp; ~(sizeof(Chunk) - 1)) 
+      + sizeof(Chunk);
+  }
+
+  OffsetChunkPair findChunk(SizeType size);
+
+  OffsetChunkPair splitTopChunk(SizeType size);
+
+  OffsetChunkPair split(OffsetChunkPair fChunk, SizeType size);
+
+  BoolType consolidateIntoTopChunk();
+
+  BoolType destroyChunk(OffsetType o);
+
+  BoolType insertObject(OffsetType offset, BoolType inUse = True);
+
+  // also remove the fragmented object
+  BoolType removeObject(OffsetType offset);
+
+  BoolType setObjectFlag(OffsetType offset, 
+                         BoolType inUse, 
+                         SizeType size = 0);
+
+  BoolType isValidFreeChunk(OffsetType offset);
+
+  OffsetType findNearestFreeChunk(OffsetType hint);
+
+  PersistentOffset &amp;getObject(OffsetType offset, 
+                              BoolType fragmented = False);
+
+  Window *getWindow(OffsetType offset, 
+                    BoolType fragmented = False);
+
+  BoolType updateFragmentedFlags(SizeType windowIndex);
+
+  BoolType isRedundant(SizeType windowIndex);
+
+  BoolType removeRedundantWindow(OffsetType offset);
+
+  BoolType updateInitialBlock(BoolType sync = False);
+
+  BoolType grow();
+}; // Arena
+
+/*
+  Entry -- an element object for implementing entry points for objects.
+
+  An Entry object is a combination of an EntryID and a PersistentPointer.
+  The PersistentPointer can work as an entry point for a structured
+  object.  A table of Entry objects is in the PersistentStorage object.
+  The table with EntryID as the key can work as indexed entry points.
+  The object contains:
+  1) the integer identifier for the entry point
+  2) the entry point
+ */
+class Entry {
+  friend class PersistentStorage;
+  friend class SortedObjectTable&lt;Entry, EntryID&gt;;
+protected:
+  EntryID            entryID;  // the identifier for the entry point
+  PersistentPointer  entryPoint; // the entry point
+  static Entry       nullObject; // the null object
+protected:
+  // constructors
+  
+  // copy constructor
+  Entry(Entry &amp;e): entryID(e.entryID), entryPoint(e.entryPoint) {}
+
+  // general constructor
+  Entry(EntryID eid, PersistentPointer &amp;pp): entryID(eid), entryPoint(pp) {}
+
+public:
+  // default constructor for generation of null object
+  Entry(): entryID(0), entryPoint() {}
+
+  // destructor
+  ~Entry() {}
+
+protected:
+  // assignment operator
+  inline Entry &amp;operator=(Entry &amp;e) {
+    entryID = e.entryID;
+    entryPoint = e.entryPoint;
+    return *this;
+  }
+
+  inline operator PersistentPointer() {
+    return entryPoint;
+  }
+
+  // methods as SortableObject
+
+  // compare with another Entry
+  inline ComparisonType compare(Entry &amp;e) {
+    return entryID &gt; e.entryID ? GreaterThan : 
+      (entryID &lt; e.entryID ? LessThan : EqualTo);
+  }
+
+  // compare with EntryID
+  inline ComparisonType compare(EntryID eid) {
+    return entryID &gt; eid ? GreaterThan :
+      (entryID &lt; eid ? LessThan : EqualTo);
+  }
+
+  // get the key, which is the entryID
+  inline EntryID getKey() {
+    return entryID;
+  }
+
+  // probe whether it is null
+  inline BoolType isNull() {
+    return entryID == 0;
+  }
+}; // Entry
+
+/*
+  PersistentStorage --
+ */
+class PersistentStorage {
+  friend class PersistentPointer;
+  friend class Window;
+  friend class Arena;
+protected:
+  SortedPointerTable&lt;Arena, ArenaID&gt;  arenaTable;
+  SortedObjectTable&lt;Entry, EntryID&gt;   entryTable;
+  char *baseDir;
+  SizeType totalWindowSize;
+public:
+  // implementation constants
+  // The page size of the operating system's virtual memery 
+  static const SizeType pageSize = 4096; 
+  static const SizeType maxArenaSize = 1024 * 1024 * 1024; // 1GB
+  static const SizeType maxWindowSize = 4 * 1024 * 1024; // 4MB
+  static const SizeType maxObjectSize = 2 * 1024 * 1024; // 2MB
+  static const SizeType maxTotalWindowSize = 32 * 1024 * 1024; // 32MB
+  static const SizeType standardWindowSize = 8 * 1024; // 16KB
+  static const SizeType standardWindowSizeNonPersistent = 1024 * 1024; // 1MB
+  static const SizeType growingChunkSize = 4 * 1024 * 1024; // 4MB
+  static const char arenaFilenameFormat[] = &quot;Arena%08x.psa&quot;;
+  static const char arenaFilenameWildcard[] = 
+  &quot;Arena[0-9a-f][0-9a-f][0-9a-f][0-9a-f]&quot;
+  &quot;[0-9a-f][0-9a-f][0-9a-f][0-9a-f]\\.psa&quot;; // &quot;Arena[0-9a-f]{8}\.psa&quot;
+  static const char entryPointTableFilename[] = &quot;EntryPoint.psa&quot;;
+public:
+  PersistentStorage(const char *dir);
+  ~PersistentStorage();
+  PersistentPointer allocate(SizeType size, BoolType persistent = True);
+  BoolType destroy(PersistentPointer &amp;pp);
+  PersistentPointer getEntryPoint(EntryID eid);
+  BoolType setEntryPoint(EntryID eid, PersistentPointer &amp;pp);
+  BoolType synchronize();
+
+  void printStatus() {
+    ostream &amp;os = cerr;
+    SizeType size;
+    os &lt;&lt; &quot;PersistentStorage {\n  baseDir &quot; &lt;&lt; baseDir
+       &lt;&lt; &quot;\n  arenaTable {\n  size &quot; &lt;&lt; (size = arenaTable.getSize())
+       &lt;&lt; &quot;\n&quot;;
+    Arena *arena;
+    SizeType index;
+    for (index = 0; index &lt; size; index++) {
+      arena = arenaTable(index);
+      arena-&gt;printStatus();
+    }
+    os &lt;&lt; &quot;} // PersistentStorage\n&quot;;
+  }
+protected:
+  inline Arena *getArena(ArenaID aid) {
+    return arenaTable[aid];
+  }
+  PointerType grab(PersistentPointer &amp;pp);
+  BoolType release(PersistentPointer &amp;pp);
+  PointerType grabReadOnly(PersistentPointer &amp;pp);
+  BoolType releaseReadOnly(PersistentPointer &amp;pp);
+
+  inline BoolType notifyMapping(SizeType size, 
+                                Window *window = 0,
+                                Arena *arena = 0) {
+    window = 0;
+    arena = 0;
+    totalWindowSize += size;
+    return True;
+  }
+
+  inline BoolType notifyUnmapping(SizeType size, 
+                                  Window *window = 0,
+                                  Arena *arena = 0) {
+    window = 0;
+    arena = 0;
+    totalWindowSize -= size;
+    return True;
+  }
+
+  SizeType cleanUp(BoolType completely = False);
+
+  BoolType initializeArenaTable();
+  BoolType initializeEntryTable();
+
+  inline static PersistentStorage *getThePS();
+}; // PersistentStorage
+
+
+class PersistentObject {
+protected:
+  ObjectID objectID;
+public:
+  PersistentObject(int id = 0): objectID(id) {}
+  inline ObjectID getID() { return objectID; }
+};
+
+class PointerPair: public PersistentPointer {
+protected:
+  PointerType obj;
+public:
+  PointerPair(PointerPair &amp;p): PersistentPointer(p), obj(0) {}
+  PointerPair(PersistentPointer p): PersistentPointer(p), obj(0) {}
+  PointerPair(PointerType o = 0): PersistentPointer(), obj(o = 0) {}
+  ~PointerPair() {
+    if (isGrabbed())
+      PersistentPointer::release();
+    if (isGrabbedReadOnly())
+      PersistentPointer::releaseReadOnly();
+  }
+  inline operator PointerType() {
+    return obj;
+  }
+  inline operator PersistentObject *() {
+    return (PersistentObject *)obj;
+  }
+  inline PointerType grab() {
+    return obj = PersistentPointer::grab();
+  }
+  inline BoolType release() {
+    if (PersistentPointer::release()) {
+      obj = 0; 
+      return True;
+    } else {
+      return False;
+    }
+  }
+  inline PointerType grabReadOnly() {
+    return obj = PersistentPointer::grabReadOnly();
+  }
+  inline BoolType releaseReadOnly() {
+    if (PersistentPointer::releaseReadOnly()) {
+      obj = 0; 
+      return True;
+    } else {
+      return False;
+    }
+  }
+}; // PointerPair
+
+#endif // __PERSISTENT_STORAGE_H_
+</PRE>
+
+<P>
+<BR><HR>
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

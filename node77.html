@@ -1,0 +1,142 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>OffsetChunkPair Class</TITLE>
+<META NAME="description" CONTENT="OffsetChunkPair Class">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node78.html">
+<LINK REL="previous" HREF="node76.html">
+<LINK REL="up" HREF="node58.html">
+<LINK REL="next" HREF="node78.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html1292"
+ HREF="node78.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1288"
+ HREF="node58.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1282"
+ HREF="node76.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1290"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1291"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1293"
+ HREF="node78.html">PersistentOffset Class</A>
+<B> Up:</B> <A NAME="tex2html1289"
+ HREF="node58.html">Persistent Storage Classes</A>
+<B> Previous:</B> <A NAME="tex2html1283"
+ HREF="node76.html">Chunk Class</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H2><A NAME="SECTION00638000000000000000">
+<TT>OffsetChunkPair</TT> Class</A>
+</H2>
+<A NAME="offsetchunkpairdesc">&#160;</A><A NAME="1039">&#160;</A>
+<P>
+<BR>
+<DIV ALIGN="CENTER"><A NAME="offsetchunkpair">&#160;</A><A NAME="1412">&#160;</A>
+<TABLE>
+<CAPTION><STRONG>Figure 3.19:</STRONG>
+<TT>OffsetChunkPair</TT> <I>Class</I></CAPTION>
+<TR><TD><IMG WIDTH="424" HEIGHT="326"
+ SRC="img24.gif"
+ ALT="\begin{figure}
+\begin{center}
+
+\includegraphics [scale=1]{OffsetChunkPair.ps}
+\end{center}\end{figure}"></TD></TR>
+</TABLE>
+</DIV>
+<BR>
+<P>
+The <TT>OffsetChunkPair</TT> class (See Figure <A HREF="node77.html#offsetchunkpair">3.19</A>) is 
+internally used for the convenience of coding.  The class is invisible 
+from the user.
+<P>
+There are two member variables in the class.  One is an <TT>offset</TT> 
+of a chunk, and the other is the pointer to the chunk.
+<P>
+When instantiated, the <TT>offset</TT> is initialized with the parameter
+and the <TT>chunk</TT> is set as 0.
+<P>
+The operation <TT>map(arena)</TT> maps the <TT>offset</TT> and sets the
+value of the <TT>chunk</TT> by invoking <TT>Arena::map()</TT>.  On the other
+hand, the operation <TT>map(window)</TT> works in the same way but invokes
+<TT>Window::map()</TT>.
+<P>
+The overloaded operators <TT>==</TT> and <TT>!=</TT> can be used with either
+another <TT>OffsetChunkPair</TT> object or 0.  The operators just compare 
+the <TT>offset</TT>s.  The assignment operator <TT>=</TT> is used with an offset 
+to set the value of the <TT>offset</TT>.  The <TT>chunk</TT> is set as 0 in 
+the assignment.
+<P>
+The overloaded cast operators <TT>(OffsetType)</TT> and <TT>(Chunk *)</TT>
+extracts the member <TT>offset</TT> and <TT>chunk</TT> respectively.  These
+cast operators enable the mixed usage with offsets and pointers.
+<P>
+The following code is a sample usage of the <TT>OffsetChunkPair</TT> class.
+The enhanced flexibility and clarity of coding are easily recognized.
+All the operators in the class are declared as <TT>inline</TT> and thus
+there is no performance degradation via the usage of the class.
+<P><PRE>
+    // in the operations of the Arena class
+    typedef Chunk *PC; 
+    OffsetType off, off2;
+    Chunk *chunk;
+    OffsetChunkPair obj1;
+    SizeType size;
+
+    obj1 = off; // assignment with OffsetType
+    obj1.map(this); // mapping
+    chunk = obj1; // converted to Chunk *
+    off2 = obj1; // converted to OffsetType
+    if (obj1 != off2) { ... } // comparison with OffsetType
+    size = PC(obj1)-&gt;getSize(); // extract chunk and access
+</PRE>
+<P><HR>
+<!--Navigation Panel-->
+<A NAME="tex2html1292"
+ HREF="node78.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1288"
+ HREF="node58.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1282"
+ HREF="node76.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1290"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1291"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1293"
+ HREF="node78.html">PersistentOffset Class</A>
+<B> Up:</B> <A NAME="tex2html1289"
+ HREF="node58.html">Persistent Storage Classes</A>
+<B> Previous:</B> <A NAME="tex2html1283"
+ HREF="node76.html">Chunk Class</A>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

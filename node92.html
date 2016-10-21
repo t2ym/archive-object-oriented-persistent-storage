@@ -1,0 +1,76 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Generalized Collection Classes</TITLE>
+<META NAME="description" CONTENT="Generalized Collection Classes">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node93.html">
+<LINK REL="previous" HREF="node91.html">
+<LINK REL="up" HREF="node91.html">
+<LINK REL="next" HREF="node93.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html1478"
+ HREF="node93.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1474"
+ HREF="node91.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1468"
+ HREF="node91.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1476"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1477"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1479"
+ HREF="node93.html">Atomicity</A>
+<B> Up:</B> <A NAME="tex2html1475"
+ HREF="node91.html">To Do</A>
+<B> Previous:</B> <A NAME="tex2html1469"
+ HREF="node91.html">To Do</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H1><A NAME="SECTION00910000000000000000">
+Generalized Collection Classes</A>
+</H1>
+<P>
+The implemented persistent storage system just performs the fundamental
+operations of storage allocation, and do not do any more.  It provides the
+C++ language with a simple mechanism for persistent storage and pointers.
+<P>
+The <TT>SimpleTree</TT> class (See Section <A HREF="node83.html#simpletreedesc">4.1</A>) 
+demonstrates the missing functions of the persistent storage.  There must
+be a set of <B>Generalized Collection Classes</B> for all the persistent
+objects.  Sets, bags, trees, tables, lists, stacks, queues, dictionaries, 
+etc. - the list will go on and on.
+<P>
+These collection classes must also support the run-time type information
+for the persistent objects to contain a mixture of elements with different 
+types in a single collection.  Class derivation will be integral to the
+implementation.  Compatibility with virtual functions will be sought
+in spite of the portability obstacles (See Section <A HREF="node79.html#entrydesc">3.3.10</A>).
+<P>
+The interfaces to the classes must be simple, general, and flexible. 
+Combination of collections must also be supported.
+<P>
+<BR><HR>
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>

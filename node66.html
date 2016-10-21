@@ -1,0 +1,72 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<!--Converted with LaTeX2HTML 97.1 (release) (July 13th, 1997)
+ by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippman, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Other Members</TITLE>
+<META NAME="description" CONTENT="Other Members">
+<META NAME="keywords" CONTENT="oops">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
+<LINK REL="STYLESHEET" HREF="oops.css">
+<LINK REL="next" HREF="node67.html">
+<LINK REL="previous" HREF="node65.html">
+<LINK REL="up" HREF="node64.html">
+<LINK REL="next" HREF="node67.html">
+</HEAD>
+<BODY BGCOLOR=#FFFFF0>
+<!--Navigation Panel-->
+<A NAME="tex2html1160"
+ HREF="node67.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
+<A NAME="tex2html1156"
+ HREF="node64.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
+<A NAME="tex2html1150"
+ HREF="node65.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
+<A NAME="tex2html1158"
+ HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
+<A NAME="tex2html1159"
+ HREF="node107.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<BR>
+<B> Next:</B> <A NAME="tex2html1161"
+ HREF="node67.html">Allocation</A>
+<B> Up:</B> <A NAME="tex2html1157"
+ HREF="node64.html">Arena Class</A>
+<B> Previous:</B> <A NAME="tex2html1151"
+ HREF="node65.html">ArenaID</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+<H3><A NAME="SECTION00634200000000000000">
+Other Members</A>
+</H3>
+<P>
+The member variable <TT>arenaSize</TT> contains the size of the <TT>Arena</TT>
+storage file in bytes.  The member variable <TT>masterWindow</TT> is used
+for two purposes.  First, it serves as the parent of all the other 
+<TT>Window</TT>s in the <TT>Arena</TT>.  Second, it maps the initial block of
+the storage file where the <TT>ArenaInitialBlock</TT> object (See Section 
+<A HREF="node70.html#aibdesc">3.3.5</A>) is placed.
+<P>
+The member variable <TT>windowTable</TT> is an instance of the
+<TT>SortedPointerTable</TT> template class as the inventory of all the 
+<TT>Window</TT>s for objects.  The member variable <TT>freeList</TT> contains
+the offset of one of the free chunks, which are doubly linked like a ring.
+The member variable <TT>topChunk</TT> contains the offset of the special
+free chunk located at the tail of the <TT>Arena</TT>.  The chunk is not 
+linked with the <TT>freeList</TT>.
+<P>
+<BR><HR>
+<ADDRESS>
+Mori Tetsuya / t2y3141592@gmail.com
+</ADDRESS>
+</BODY>
+</HTML>
